@@ -84,6 +84,47 @@ class Process3mf(unittest.TestCase):
     def test_md5_lower(self):
         self.check(False)
 
+    def test_bambu_layout_is_kept(self):
+        """Bambu Studio archives use data descriptors (flag 0x8); Bambu Connect needs that layout
+        and all untouched entries byte-identical."""
+        class Unseekable(io.RawIOBase):
+            def __init__(self):
+                self.buf = io.BytesIO()
+
+            def writable(self):
+                return True
+
+            def write(self, b):
+                return self.buf.write(b)
+
+        sink = Unseekable()
+        with zipfile.ZipFile(sink, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("[Content_Types].xml", "<Types/>")
+            z.writestr("Metadata/plate_1.gcode.md5", hashlib.md5(SAMPLE.encode()).hexdigest().upper())
+            z.writestr("Metadata/plate_1.gcode", SAMPLE)
+            z.writestr("Metadata/plate_1.png", b"\x89PNG" + bytes(range(256)) * 20)
+        src = sink.buf.getvalue()
+        self.assertTrue(all(i.flag_bits & 0x8 for i in zipfile.ZipFile(io.BytesIO(src)).infolist()))
+
+        out, _, _, removed = process("Cube.gcode.3mf", src)
+        self.assertEqual(len(removed), 5)
+        o, n = zipfile.ZipFile(io.BytesIO(src)), zipfile.ZipFile(io.BytesIO(out))
+        self.assertIsNone(n.testzip())
+        self.assertEqual(o.namelist(), n.namelist())
+        for a, b in zip(o.infolist(), n.infolist()):
+            self.assertEqual(a.flag_bits, b.flag_bits)
+            if a.filename in ("[Content_Types].xml", "Metadata/plate_1.png"):
+                raw = lambda d, i: d[i.header_offset:i.header_offset + 30 + len(i.filename) + i.compress_size + 16]
+                self.assertEqual(raw(src, a), raw(out, b))
+        g = n.read("Metadata/plate_1.gcode")
+        self.assertIn(b"; [NoCali] M974", g)
+        self.assertEqual(n.read("Metadata/plate_1.gcode.md5").decode(), hashlib.md5(g).hexdigest().upper())
+
+    def test_nothing_to_remove_returns_original_bytes(self):
+        src = make_3mf("G28\nM975 S1\n")
+        out, _, _, removed = process("Cube.gcode.3mf", src)
+        self.assertEqual((out, removed), (src, []))
+
     def test_plain_gcode(self):
         out, name, display, removed = process("a.gcode", SAMPLE.encode())
         self.assertEqual((name, display, len(removed)), ("a.gcode", "a", 5))
