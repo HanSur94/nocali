@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 
 def data_dir():

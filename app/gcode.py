@@ -142,15 +142,25 @@ def replace_in_zip(data, replacements):
     return bytes(out)
 
 
+def safe_name(base):
+    """Bambu Connect fails to import files whose path contains characters like + or ( ).
+    Keep only letters, digits, '-', '_' and '.' (non-ASCII letters are transliterated or dropped)."""
+    base = base.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("Ä", "Ae") \
+               .replace("Ö", "Oe").replace("Ü", "Ue").replace("ß", "ss")
+    base = re.sub(r"[^A-Za-z0-9._-]+", "_", base)
+    base = re.sub(r"_+", "_", base).strip("._-")
+    return base[:120] or "print"
+
+
 def process(filename, data, remove_fast_check=True):
     """Returns (bytes, output_filename, display_name, [(where, code), ...])."""
     lower = filename.lower()
     if lower.endswith(".3mf"):
         out, removed = patch_3mf(data, remove_fast_check)
-        base = re.sub(r"(\.gcode)?\.3mf$", "", filename, flags=re.I)
+        base = safe_name(re.sub(r"(\.gcode)?\.3mf$", "", filename, flags=re.I))
         return out, base + ".gcode.3mf", base, removed
     if lower.endswith(".gcode"):
         text, removed = patch_gcode(data.decode("utf-8"), remove_fast_check)
-        base = filename[:-6]
+        base = safe_name(filename[:-6])
         return text.encode("utf-8"), base + ".gcode", base, [("line %d" % l, c) for l, c in removed]
     raise ValueError("Only .gcode or .gcode.3mf files are supported.")

@@ -125,6 +125,15 @@ class Process3mf(unittest.TestCase):
         out, _, _, removed = process("Cube.gcode.3mf", src)
         self.assertEqual((out, removed), (src, []))
 
+    def test_safe_output_name(self):
+        # Bambu Connect can't import paths with + or brackets
+        _, name, display, _ = process("christmas+treee_(1).gcode.3mf", make_3mf(SAMPLE))
+        self.assertEqual((name, display), ("christmas_treee_1.gcode.3mf", "christmas_treee_1"))
+        _, name, _, _ = process("Größe 2 (final).gcode", SAMPLE.encode())
+        self.assertEqual(name, "Groesse_2_final.gcode")
+        _, name, _, _ = process("+++.gcode", SAMPLE.encode())
+        self.assertEqual(name, "print.gcode")
+
     def test_plain_gcode(self):
         out, name, display, removed = process("a.gcode", SAMPLE.encode())
         self.assertEqual((name, display, len(removed)), ("a.gcode", "a", 5))
