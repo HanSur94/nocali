@@ -109,6 +109,8 @@ python3 -m unittest discover -s tests -v   # tests (incl. a simulated printer)
 python3 tests/demo.py                       # UI against a simulated printer on :7399
 ```
 
+The UI follows the design system in [`design-system/nocali`](design-system/nocali): `MASTER.md` (generated base: Swiss minimalism, real-time monitoring, dark tech palette with status green) and [`pages/dashboard.md`](design-system/nocali/pages/dashboard.md) (layout, colours for light and dark with checked contrast, components, motion).
+
 ---
 
 <a id="deutsch"></a>

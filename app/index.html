@@ -3,185 +3,360 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>NoCali</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2300ae42'/%3E%3Cpath d='M8 16h4l2-6 4 12 2-6h4' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2322C55E'/%3E%3Cpath d='M7 17h4l2.5-7 5 13 2.5-6H25' stroke='%230F172A' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!-- Design system: design-system/nocali/MASTER.md + pages/dashboard.md -->
 <style>
   :root {
-    --bg: #f6f7f5; --card: #ffffff; --text: #1c1f1d; --muted: #6b716d; --line: #dfe3df;
-    --accent: #00ae42; --accent-ink: #ffffff; --warn: #b45309; --err: #c0392b; --code: #f0f2ef; --chip: #f0f2ef;
+    color-scheme: dark;
+    --bg: #0F172A; --card: #1B2336; --muted: #272F42; --fg: #F8FAFC; --fg-muted: #94A3B8;
+    --border: #334155; --border-strong: #64748B; --accent: #22C55E; --on-accent: #0F172A;
+    --accent-tint: rgba(34, 197, 94, .12); --warn: #F59E0B; --danger: #F87171; --info: #38BDF8; --ring: #FFFFFF;
+    --font-sans: "Fira Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-mono: "Fira Code", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --radius: 12px; --radius-sm: 8px;
+    --dur-fast: 150ms; --dur-base: 250ms; --dur-slow: 600ms;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .25);
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #121413; --card: #1b1e1c; --text: #e8ebe8; --muted: #9aa19c; --line: #2c312e;
-      --accent: #1fc95c; --accent-ink: #0b0d0c; --warn: #f59e0b; --err: #ff6b5b; --code: #232724; --chip: #232724; }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #F8FAFC; --card: #FFFFFF; --muted: #F1F5F9; --fg: #0F172A; --fg-muted: #475569;
+      --border: #E2E8F0; --border-strong: #7C8BA1; --accent: #15803D; --on-accent: #FFFFFF;
+      --accent-tint: rgba(21, 128, 61, .08); --warn: #B45309; --danger: #DC2626; --info: #0369A1; --ring: #0F172A;
+      --shadow: 0 1px 2px rgba(15, 23, 42, .06);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root { --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; }
+    .pulse { animation: none !important; }
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
-  main { max-width: 820px; margin: 0 auto; padding: 32px 16px 64px; }
-  header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
-  .lang { display: flex; gap: 4px; }
-  .lang button { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 2px 8px; font-size: 12px; font-weight: 600; }
-  .lang button.on { color: var(--text); border-color: var(--text); }
-  .sub { color: var(--muted); margin: 0 0 24px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
-  button, a.btn { appearance: none; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink);
-    font: inherit; font-weight: 600; padding: 8px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
-  button.ghost, a.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
-  button:disabled { opacity: .6; cursor: default; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 var(--font-sans); }
+  a { color: inherit; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .muted { color: var(--fg-muted); }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .icon { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .icon.sm { width: 16px; height: 16px; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+
+  /* top bar */
+  .topbar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: saturate(140%) blur(8px); -webkit-backdrop-filter: saturate(140%) blur(8px); border-bottom: 1px solid var(--border); }
+  .topbar-in { max-width: 1120px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -.01em; margin-right: auto; }
+  .brand-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
+  .brand-mark .icon { width: 18px; height: 18px; stroke-width: 2.4; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--fg-muted);
+    border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fg-muted); flex: none; }
+  .dot.on { background: var(--accent); } .dot.bad { background: var(--danger); } .dot.wait { background: var(--warn); }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 50% { box-shadow: 0 0 0 5px transparent; } }
+  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; }
+  .seg button { min-height: 36px; min-width: 40px; border: 0; background: transparent; color: var(--fg-muted); font: 600 13px var(--font-sans); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--muted); color: var(--fg); }
+  .icon-btn { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong); background: transparent; color: var(--fg); cursor: pointer; transition: background var(--dur-fast); }
+  .icon-btn:hover { background: var(--muted); }
+
+  /* layout */
+  main { max-width: 1120px; margin: 0 auto; padding: 20px 16px 48px; }
+  .grid { display: grid; gap: 16px; }
+  .col { display: grid; gap: 16px; align-content: start; min-width: 0; }
+  @media (min-width: 768px) { main { padding: 24px 24px 56px; } .topbar-in { padding: 10px 24px; } }
+  @media (min-width: 900px) {
+    .grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; }
+  }
+  @media (max-width: 899px) {  /* single column order: status, send, camera, rest */
+    .grid, .col { display: contents; }
+    .grid { display: flex; flex-direction: column; gap: 16px; }
+    #cardStatus { order: 1; } #pAlerts { order: 2; } #cardSend { order: 3; } #cardCam { order: 4; }
+    #cardTemps { order: 5; } #cardMachine { order: 6; } #cardAms { order: 7; }
+    #pAlerts:empty { display: none; }
+  }
+
+  /* cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); min-width: 0; }
+  @media (max-width: 479px) { .card { padding: 16px; } }
+  .card-title { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em; color: var(--fg-muted); }
+  .card-title .spacer { margin-left: auto; }
+
+  /* buttons */
+  .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px;
+    border-radius: var(--radius-sm); border: 1px solid transparent; font: 600 15px var(--font-sans); cursor: pointer; text-decoration: none;
+    background: var(--accent); color: var(--on-accent); transition: filter var(--dur-fast), background var(--dur-fast); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.secondary { background: transparent; color: var(--fg); border-color: var(--border-strong); }
+  .btn.secondary:hover { background: var(--muted); filter: none; }
+  .btn:disabled { opacity: .55; cursor: not-allowed; filter: none; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .muted { color: var(--muted); }
-  .err { color: var(--err); } .warn { color: var(--warn); } .ok { color: var(--accent); }
 
-  /* printer */
-  .p-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .p-name { font-weight: 600; }
-  .p-conn { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
-  .dot.on { background: var(--accent); } .dot.bad { background: var(--err); }
-  .p-state { font-size: 22px; font-weight: 700; margin: 10px 0 2px; letter-spacing: -0.01em; }
-  .p-job { color: var(--muted); font-size: 14px; word-break: break-all; }
-  .bar { height: 10px; background: var(--code); border-radius: 6px; overflow: hidden; margin: 12px 0 6px; }
-  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .6s; }
-  .p-nums { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); flex-wrap: wrap; gap: 4px 16px; }
-  .p-nums b { color: var(--text); font-variant-numeric: tabular-nums; }
-  .stage { margin-top: 10px; font-size: 14px; }
-  .stage.cali { color: var(--warn); font-weight: 600; }
-  .alerts { margin-top: 12px; display: grid; gap: 8px; }
-  .alert { border: 1px solid var(--err); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
-  .alert.lvl3, .alert.lvl4 { border-color: var(--warn); }
-  .alert code { font-size: 12px; color: var(--muted); }
-  .alert a { color: inherit; }
-  .cam { margin-top: 14px; position: relative; background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16 / 9; display: none; }
-  .cam.on { display: block; }
+  /* status hero */
+  .status-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+  .p-name { font-size: 14px; color: var(--fg-muted); display: flex; align-items: center; gap: 6px; }
+  .p-state { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; margin: 4px 0 2px; }
+  .p-job { font-size: 14px; color: var(--fg-muted); overflow-wrap: anywhere; }
+  .p-pct { font-size: 40px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
+  .p-pct small { font-size: 18px; color: var(--fg-muted); margin-left: 2px; }
+  .bar { height: 8px; background: var(--muted); border-radius: 999px; overflow: hidden; margin: 18px 0 14px; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width var(--dur-slow) ease-out; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .stat { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+  .stat .icon { color: var(--fg-muted); margin-top: 2px; }
+  .stat small { display: block; font-size: 12px; color: var(--fg-muted); }
+  .stat b { font: 600 16px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  @media (max-width: 479px) {
+    .stats { gap: 8px; } .stat { gap: 6px; } .stat .icon { display: none; } .stat b { font-size: 15px; }
+    .tile b { font-size: 18px; } .tile b span { display: block; font-size: 12px; margin-top: 2px; }
+  }
+  .stage { margin-top: 16px; display: flex; gap: 8px; align-items: center; font-size: 14px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--muted); }
+  .stage.cali { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); font-weight: 600; }
+  .p-msg { margin-top: 12px; font-size: 14px; color: var(--fg-muted); }
+  .p-msg.err { color: var(--danger); }
+  .empty-state { text-align: center; padding: 8px 0; }
+  .empty-state p { margin: 6px 0 16px; color: var(--fg-muted); }
+
+  /* alerts */
+  .alerts { display: grid; gap: 10px; }
+  .alert { display: flex; gap: 12px; align-items: flex-start; background: var(--card); border: 1px solid var(--border);
+    border-left: 4px solid var(--danger); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 14px; }
+  .alert .icon { color: var(--danger); margin-top: 1px; }
+  .alert.lvl3 { border-left-color: var(--warn); } .alert.lvl3 .icon { color: var(--warn); }
+  .alert.lvl4 { border-left-color: var(--info); } .alert.lvl4 .icon { color: var(--info); }
+  .alert b { display: block; }
+  .alert .meta { color: var(--fg-muted); font-size: 12px; margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .alert a { display: inline-flex; gap: 4px; align-items: center; }
+
+  /* camera */
+  .cam { position: relative; background: #000; border-radius: var(--radius-sm); overflow: hidden; aspect-ratio: 16 / 9; }
   .cam img { width: 100%; height: 100%; object-fit: contain; display: block; }
-  .cam .cam-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 14px; padding: 16px; text-align: center; }
-  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .tile { background: var(--code); border-radius: 8px; padding: 8px 10px; min-width: 0; }
-  .tile small { display: block; color: var(--muted); font-size: 12px; }
-  .tile b { font-size: 16px; font-variant-numeric: tabular-nums; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { background: var(--chip); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
-  .chip span { color: var(--muted); }
-  .ams-unit { margin-top: 8px; }
-  .ams-head { font-size: 13px; color: var(--muted); display: flex; gap: 12px; margin-bottom: 6px; }
-  .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .slot { border: 2px solid transparent; border-radius: 10px; background: var(--code); padding: 8px; text-align: center; font-size: 13px; min-width: 0; }
-  .slot.active { border-color: var(--accent); }
-  .swatch { width: 34px; height: 34px; border-radius: 50%; margin: 2px auto 6px; border: 1px solid rgba(128,128,128,.4); }
-  .slot.empty .swatch { background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(128,128,128,.3) 4px 6px); }
-  .slot b { display: block; }
-  .slot small { color: var(--muted); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cam-overlay { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; color: #CBD5E1; font-size: 14px; }
+  .cam-overlay .btn { margin-top: 10px; }
 
-  /* settings + drop */
-  details.settings { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
-  details.settings[open] { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; color: var(--text); }
-  summary { cursor: pointer; }
-  form.cfg { display: grid; gap: 10px; margin-top: 12px; }
-  form.cfg label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
-  form.cfg input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-  .found { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-  .found button { text-align: left; }
-  #drop { border: 2px dashed var(--line); border-radius: 14px; background: var(--card);
-    padding: 40px 20px; text-align: center; cursor: pointer; transition: border-color .15s; }
-  #drop.over { border-color: var(--accent); }
-  #drop strong { display: block; font-size: 17px; margin-bottom: 4px; }
-  #drop span { color: var(--muted); font-size: 14px; }
-  .opts { display: flex; gap: 8px 22px; flex-wrap: wrap; margin: 14px 2px 0; color: var(--muted); font-size: 14px; }
-  .opts label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
-  .result { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-top: 18px; }
-  .result h3 { margin: 0 0 6px; font-size: 15px; word-break: break-all; }
-  .meta { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
-  .meta.ok { color: var(--accent); font-weight: 600; }
-  pre { background: var(--code); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px;
-    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-x: auto; max-height: 200px; }
-  #offline { display: none; border: 1px solid var(--err); color: var(--err); }
-  details.info { margin-top: 32px; color: var(--muted); font-size: 14px; }
-  details.info code { background: var(--code); padding: 1px 5px; border-radius: 4px; }
-  footer { margin-top: 32px; color: var(--muted); font-size: 12px; text-align: center; }
-  footer a { color: inherit; }
-  @media (max-width: 560px) {
-    .grid3 { grid-template-columns: repeat(2, 1fr); }
-    .slots { grid-template-columns: repeat(2, 1fr); }
+  /* tiles */
+  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .tile { background: var(--muted); border-radius: var(--radius-sm); padding: 10px 12px; min-width: 0; }
+  .tile small { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-muted); }
+  .tile b { display: block; font: 600 20px var(--font-mono); font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; }
+  .tile b span { font-size: 13px; color: var(--fg-muted); font-weight: 500; }
+  .kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0; }
+  .kv > div { display: flex; gap: 8px; align-items: center; min-width: 0; font-size: 14px; }
+  .kv .icon { color: var(--fg-muted); }
+  .kv dt { color: var(--fg-muted); }
+  .kv dd { margin: 0 0 0 auto; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fanbar { height: 4px; background: var(--muted); border-radius: 999px; margin-top: 4px; overflow: hidden; }
+  .fanbar > div { height: 100%; background: var(--fg-muted); transition: width var(--dur-slow); }
+  .fans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; font-size: 13px; }
+  .fans span { color: var(--fg-muted); } .fans b { float: right; font-family: var(--font-mono); font-weight: 500; }
+
+  /* AMS */
+  .ams-unit + .ams-unit { margin-top: 16px; }
+  .ams-head { font-size: 13px; color: var(--fg-muted); display: flex; gap: 14px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .ams-head b { color: var(--fg); font-size: 14px; }
+  .ams-head span { display: inline-flex; gap: 4px; align-items: center; }
+  .slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  @media (max-width: 479px) { .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .slot { border: 2px solid transparent; border-radius: var(--radius-sm); background: var(--muted); padding: 10px 6px; text-align: center; font-size: 13px; min-width: 0; }
+  .slot.active { border-color: var(--accent); background: var(--accent-tint); }
+  .swatch { width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 6px; box-shadow: inset 0 0 0 1px rgba(128, 128, 128, .45); }
+  .slot.empty .swatch { background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(128, 128, 128, .35) 4px 6px); }
+  .slot b { display: block; font-size: 14px; }
+  .slot small { display: block; color: var(--fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slot.active small { color: var(--accent); font-weight: 600; }
+  .rem { height: 3px; background: color-mix(in srgb, var(--fg-muted) 25%, transparent); border-radius: 999px; margin: 6px 8px 0; overflow: hidden; }
+  .rem > div { height: 100%; background: var(--fg-muted); }
+
+  /* send */
+  #drop { border: 2px dashed var(--border-strong); border-radius: var(--radius); padding: 28px 16px; text-align: center; cursor: pointer;
+    transition: border-color var(--dur-fast), background var(--dur-fast); }
+  #drop:hover, #drop.over { border-color: var(--accent); background: var(--accent-tint); }
+  #drop .icon { width: 28px; height: 28px; color: var(--accent); }
+  #drop strong { display: block; font-size: 16px; margin: 8px 0 2px; }
+  #drop span { color: var(--fg-muted); font-size: 14px; }
+  .opts { display: grid; gap: 4px; margin-top: 12px; }
+  .check { display: flex; gap: 10px; align-items: center; min-height: 40px; font-size: 14px; cursor: pointer; }
+  .check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; flex: none; }
+  .result { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+  .result h3 { margin: 0 0 4px; font-size: 14px; overflow-wrap: anywhere; display: flex; gap: 8px; align-items: center; }
+  .result .rmeta { font-size: 13px; color: var(--fg-muted); margin-bottom: 10px; display: flex; gap: 6px; align-items: flex-start; }
+  .result .rmeta.ok { color: var(--accent); } .result .rmeta.warn { color: var(--warn); } .result .rmeta.err { color: var(--danger); }
+  .result pre { background: var(--muted); border-radius: var(--radius-sm); padding: 10px 12px; margin: 0 0 12px; font: 12px/1.6 var(--font-mono);
+    overflow-x: auto; max-height: 160px; }
+
+  /* dialog */
+  dialog { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--fg); padding: 0;
+    width: min(520px, calc(100vw - 32px)); box-shadow: 0 20px 50px rgba(0, 0, 0, .35); }
+  dialog::backdrop { background: rgba(2, 6, 23, .55); }
+  dialog[open] { animation: pop var(--dur-base) ease-out; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .dlg-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .dlg-head h2 { margin: 0; font-size: 18px; }
+  .dlg-body { padding: 20px; display: grid; gap: 14px; }
+  .help { font-size: 14px; color: var(--fg-muted); margin: 0; }
+  .field { display: grid; gap: 6px; }
+  .field label { font-size: 14px; font-weight: 600; }
+  .field input { min-height: 44px; font: 16px var(--font-sans); color: var(--fg); background: var(--bg); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 0 12px; }
+  .field .hint { font-size: 12px; color: var(--fg-muted); }
+  .found { display: grid; gap: 8px; }
+  .found .btn { justify-content: flex-start; text-align: left; font-weight: 500; }
+  .form-msg { font-size: 14px; min-height: 1.5em; margin: 0; }
+  .form-msg.err { color: var(--danger); } .form-msg.ok { color: var(--accent); }
+
+  details.info { margin-top: 24px; font-size: 14px; color: var(--fg-muted); }
+  details.info summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+  details.info code { font-family: var(--font-mono); font-size: 13px; background: var(--muted); padding: 1px 5px; border-radius: 4px; }
+  footer { margin-top: 24px; color: var(--fg-muted); font-size: 12px; text-align: center; }
+  #offline { border-color: var(--danger); color: var(--danger); display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+
+  /* narrow cards: stack key/value rows and fans (kept last so it wins) */
+  @media (max-width: 479px), (min-width: 900px) and (max-width: 1060px) {
+    .kv, .fans { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-7 5 14 2.5-7H21"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 4s1.5-1 4-1 4.5 2 7 2 3-1 3-1v10s-.5 1-3 1-4.5-2-7-2-4 1-4 1"/></symbol>
+    <symbol id="i-therm" viewBox="0 0 24 24"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></symbol>
+    <symbol id="i-fan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><path d="M12 10.5c0-3 .8-6.5 3.5-6.5a2.5 2.5 0 0 1 0 5c-1.6 0-2.4.6-3.5 1.5Z"/><path d="M12 10.5c0-3 .8-6.5 3.5-6.5a2.5 2.5 0 0 1 0 5c-1.6 0-2.4.6-3.5 1.5Z" transform="rotate(120 12 12)"/><path d="M12 10.5c0-3 .8-6.5 3.5-6.5a2.5 2.5 0 0 1 0 5c-1.6 0-2.4.6-3.5 1.5Z" transform="rotate(240 12 12)"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.86a10 10 0 0 1 14 0"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5A5.5 5.5 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
+    <symbol id="i-nozzle" viewBox="0 0 24 24"><path d="M7 3h10v5l-3 6h-4L7 8Z"/><path d="M12 14v3"/><path d="M12 20h.01"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+    <symbol id="i-spool" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6"/></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></symbol>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg></span>NoCali</div>
+    <span class="pill" id="connPill" role="status" aria-atomic="true"><span class="dot" id="connDot"></span><span id="connText"></span></span>
+    <div class="seg" role="group" data-t-label="language">
+      <button type="button" data-lang="en" aria-pressed="false">EN</button><button type="button" data-lang="de" aria-pressed="false">DE</button>
+    </div>
+    <button type="button" class="icon-btn" id="btnSettings" data-t-label="settings"><svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg></button>
+  </div>
+</header>
+
 <main>
-  <header>
-    <h1>NoCali</h1>
-    <div class="lang"><button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button></div>
-  </header>
-  <p class="sub" data-t="sub"></p>
+  <div class="card" id="offline" hidden><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><span data-t="offline"></span></div>
 
-  <div class="card" id="offline" data-t="offline"></div>
+  <div class="grid">
+    <div class="col">
+      <!-- STATUS -->
+      <section class="card" id="cardStatus" aria-labelledby="hStatus">
+        <h2 class="card-title" id="hStatus"><svg class="icon sm" aria-hidden="true"><use href="#i-box"/></svg><span data-t="status"></span></h2>
+        <div id="statusEmpty" class="empty-state" hidden>
+          <p data-t="setupHint"></p>
+          <button type="button" class="btn" id="btnSetup"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span data-t="setup"></span></button>
+        </div>
+        <div id="statusBody" hidden>
+          <div class="status-top">
+            <div style="min-width:0">
+              <div class="p-name" id="pName"></div>
+              <div class="p-state" id="pState">–</div>
+              <div class="p-job" id="pJob"></div>
+            </div>
+            <div class="p-pct mono" id="pPct">–</div>
+          </div>
+          <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="pBarWrap" data-t-label="progress"><div id="pBar"></div></div>
+          <div class="stats">
+            <div class="stat"><svg class="icon" aria-hidden="true"><use href="#i-layers"/></svg><div><small data-t="layer"></small><b id="pLayer">–</b></div></div>
+            <div class="stat"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg><div><small data-t="remaining"></small><b id="pLeft">–</b></div></div>
+            <div class="stat"><svg class="icon" aria-hidden="true"><use href="#i-flag"/></svg><div><small data-t="eta"></small><b id="pEta">–</b></div></div>
+          </div>
+          <div class="stage" id="pStage" hidden></div>
+        </div>
+        <div class="p-msg" id="pMsg"></div>
+      </section>
 
-  <section class="card" id="printer" hidden>
-    <div class="p-head">
-      <span class="p-name" id="pName"></span>
-      <span class="p-conn"><span class="dot" id="pDot"></span><span id="pConn"></span></span>
+      <div class="alerts" id="pAlerts" role="alert"></div>
+
+      <!-- CAMERA -->
+      <section class="card" id="cardCam" aria-labelledby="hCam" hidden>
+        <h2 class="card-title" id="hCam"><svg class="icon sm" aria-hidden="true"><use href="#i-camera"/></svg><span data-t="camera"></span>
+          <span class="spacer"></span>
+          <button type="button" class="btn secondary" id="btnCamStop" hidden><svg class="icon sm" aria-hidden="true"><use href="#i-stop"/></svg><span data-t="camStop"></span></button>
+        </h2>
+        <div class="cam">
+          <img id="camImg" alt="" hidden>
+          <div class="cam-overlay" id="camOverlay">
+            <div><div id="camMsg"></div>
+              <button type="button" class="btn" id="btnCamPlay"><svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span data-t="camShow"></span></button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-    <div class="p-state" id="pState">–</div>
-    <div class="p-job" id="pJob"></div>
-    <div class="bar"><div id="pBar"></div></div>
-    <div class="p-nums">
-      <span><b id="pPct">–</b></span>
-      <span><span data-t="layer"></span> <b id="pLayer">–</b></span>
-      <span><span data-t="remaining"></span> <b id="pLeft">–</b></span>
-      <span><span data-t="eta"></span> <b id="pEta">–</b></span>
+
+    <div class="col">
+      <!-- SEND -->
+      <section class="card" id="cardSend" aria-labelledby="hSend">
+        <h2 class="card-title" id="hSend"><svg class="icon sm" aria-hidden="true"><use href="#i-send"/></svg><span data-t="sendTitle"></span></h2>
+        <div id="drop" tabindex="0" role="button" aria-describedby="dropHelp">
+          <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
+          <strong data-t="drop"></strong>
+          <span id="dropHelp" data-t="dropOr"></span>
+          <input id="file" type="file" accept=".gcode,.3mf" multiple hidden>
+        </div>
+        <div class="opts">
+          <label class="check"><input type="checkbox" id="optSend" checked> <span data-t="optSend"></span></label>
+          <label class="check"><input type="checkbox" id="optFast" checked> <span data-t="optFast"></span></label>
+        </div>
+        <div id="out" aria-live="polite"></div>
+      </section>
+
+      <!-- TEMPS -->
+      <section class="card" id="cardTemps" aria-labelledby="hTemps" hidden>
+        <h2 class="card-title" id="hTemps"><svg class="icon sm" aria-hidden="true"><use href="#i-therm"/></svg><span data-t="temps"></span></h2>
+        <div class="tiles">
+          <div class="tile"><small data-t="nozzle"></small><b id="tNoz">–</b></div>
+          <div class="tile"><small data-t="bed"></small><b id="tBed">–</b></div>
+          <div class="tile"><small data-t="chamber"></small><b id="tCh">–</b></div>
+        </div>
+      </section>
+
+      <!-- MACHINE -->
+      <section class="card" id="cardMachine" aria-labelledby="hMachine" hidden>
+        <h2 class="card-title" id="hMachine"><svg class="icon sm" aria-hidden="true"><use href="#i-gauge"/></svg><span data-t="machine"></span></h2>
+        <dl class="kv" id="kv"></dl>
+        <div class="fans" id="fans"></div>
+      </section>
+
+      <!-- AMS -->
+      <section class="card" id="cardAms" aria-labelledby="hAms" hidden>
+        <h2 class="card-title" id="hAms"><svg class="icon sm" aria-hidden="true"><use href="#i-spool"/></svg><span>AMS</span></h2>
+        <div id="ams"></div>
+      </section>
     </div>
-    <div class="stage" id="pStage"></div>
-    <div class="alerts" id="pAlerts"></div>
-    <div class="p-msg muted" id="pMsg"></div>
-
-    <div class="row" style="margin-top:12px">
-      <button type="button" class="ghost" id="btnCam" data-t="camShow"></button>
-    </div>
-    <div class="cam" id="cam"><img id="camImg" alt=""><div class="cam-msg" id="camMsg"></div></div>
-
-    <h2 data-t="temps"></h2>
-    <div class="grid3">
-      <div class="tile"><small data-t="nozzle"></small><b id="tNoz">–</b></div>
-      <div class="tile"><small data-t="bed"></small><b id="tBed">–</b></div>
-      <div class="tile"><small data-t="chamber"></small><b id="tCh">–</b></div>
-    </div>
-
-    <h2 data-t="machine"></h2>
-    <div class="chips" id="chips"></div>
-
-    <div id="amsBox" hidden>
-      <h2>AMS</h2>
-      <div id="ams"></div>
-    </div>
-  </section>
-
-  <details class="settings" id="settings">
-    <summary data-t="settings"></summary>
-    <p class="muted" data-t="settingsHelp"></p>
-    <button type="button" class="ghost" id="btnFind" data-t="find"></button>
-    <div class="found" id="found"></div>
-    <form class="cfg" id="cfgForm">
-      <label><span data-t="ip"></span><input id="cIp" required placeholder="192.168.1.50" autocomplete="off"></label>
-      <label><span data-t="serial"></span><input id="cSerial" required autocomplete="off"></label>
-      <label><span data-t="name"></span><input id="cName" placeholder="X1 Carbon" autocomplete="off"></label>
-      <label><span data-t="code"></span><input id="cCode" type="password" autocomplete="off"></label>
-      <div class="row"><button type="submit" data-t="save"></button></div>
-      <div class="muted" id="cfgMsg"></div>
-    </form>
-  </details>
-
-  <div id="drop" tabindex="0">
-    <strong data-t="drop"></strong>
-    <span data-t="dropOr"></span>
-    <input id="file" type="file" accept=".gcode,.3mf" multiple hidden>
   </div>
-  <div class="opts">
-    <label><input type="checkbox" id="optSend" checked> <span data-t="optSend"></span></label>
-    <label><input type="checkbox" id="optFast" checked> <span data-t="optFast"></span></label>
-  </div>
-  <div id="out"></div>
 
   <details class="info">
     <summary data-t="whatTitle"></summary>
@@ -191,64 +366,84 @@
   <footer>NoCali <span id="ver"></span> · <a href="https://github.com/HanSur94/nocali" target="_blank" rel="noopener">GitHub</a></footer>
 </main>
 
+<!-- SETTINGS -->
+<dialog id="dlgSettings" aria-labelledby="hSettings">
+  <div class="dlg-head">
+    <h2 id="hSettings" data-t="settings"></h2>
+    <button type="button" class="icon-btn" id="btnClose" data-t-label="close"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <form class="dlg-body" id="cfgForm" novalidate>
+    <p class="help" data-t="settingsHelp"></p>
+    <button type="button" class="btn secondary" id="btnFind"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span data-t="find"></span></button>
+    <div class="found" id="found" aria-live="polite"></div>
+    <div class="field"><label for="cIp" data-t="ip"></label><input id="cIp" placeholder="192.168.1.50" autocomplete="off" inputmode="decimal"></div>
+    <div class="field"><label for="cSerial" data-t="serial"></label><input id="cSerial" autocomplete="off" spellcheck="false"></div>
+    <div class="field"><label for="cName" data-t="name"></label><input id="cName" placeholder="X1 Carbon" autocomplete="off"></div>
+    <div class="field"><label for="cCode" data-t="code"></label><input id="cCode" type="password" autocomplete="off" aria-describedby="codeHint"><span class="hint" id="codeHint"></span></div>
+    <p class="form-msg" id="cfgMsg" role="status"></p>
+    <div class="row"><button type="submit" class="btn"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span data-t="save"></span></button></div>
+  </form>
+</dialog>
+
 <script>
 const $ = id => document.getElementById(id);
+const ICON = (name, cls = '') => `<svg class="icon ${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 
 // ---------- i18n ----------
 const T = {
   en: {
-    sub: 'Drop a sliced file from Bambu Studio. NoCali removes the X1 vibration calibration and opens it in Bambu Connect, ready to print.',
-    offline: 'The NoCali helper isn\'t running, so nothing can be processed.',
-    layer: 'Layer', remaining: 'Remaining', eta: 'Done at', temps: 'Temperatures', nozzle: 'Nozzle', bed: 'Bed', chamber: 'Chamber',
-    machine: 'Printer', camShow: 'Show camera', camHide: 'Hide camera', camLoading: 'Connecting to camera…',
+    language: 'Language', offline: 'The NoCali helper isn\'t running, so nothing can be processed or shown.',
+    status: 'Printer status', setupHint: 'Connect your printer to see progress, temperatures, AMS and the camera here.', setup: 'Connect printer',
+    progress: 'Print progress', layer: 'Layer', remaining: 'Remaining', eta: 'Done at', temps: 'Temperatures', nozzle: 'Nozzle', bed: 'Bed', chamber: 'Chamber',
+    machine: 'Printer', camera: 'Camera', camShow: 'Start live view', camStop: 'Stop', camLoading: 'Connecting to camera…',
     camNoFfmpeg: 'The camera needs ffmpeg. Install it (macOS: brew install ffmpeg) and restart NoCali.',
-    camNone: 'This printer doesn\'t offer a LAN camera stream (enable "LAN Mode Liveview" on the printer).',
-    camErr: 'Camera error: ', live: 'live', waiting: 'Connected, waiting for the first report…',
-    settings: 'Printer settings', settingsHelp: 'Live status is read directly from your printer on your home network (read-only). The access code is on the printer screen: Settings → Network ("Access Code").',
-    find: 'Find printer on network', searching: 'Searching…', notFound: 'No printer found. Enter the IP and serial manually (printer screen: Settings → Device).',
-    ip: 'IP address', serial: 'Serial number', name: 'Name', code: 'LAN access code', codeSaved: 'saved (leave empty to keep)', code8: '8 characters',
+    camNone: 'This printer doesn\'t offer a LAN camera stream. Turn on "LAN Mode Liveview" on the printer.',
+    camErr: 'Camera error: ', live: 'Live', waiting: 'Connected, waiting for the first report…', notConfigured: 'No printer',
+    settings: 'Printer settings', close: 'Close', settingsHelp: 'Live status is read directly from your printer on your home network (read-only). The access code is on the printer screen: Settings → Network ("Access Code").',
+    find: 'Find printer on network', searching: 'Searching…', notFound: 'No printer found. Enter IP address and serial number manually (printer screen: Settings → Device).',
+    ip: 'IP address', serial: 'Serial number', name: 'Name (optional)', code: 'LAN access code', codeSaved: 'Saved. Leave empty to keep it.', code8: '8 characters, shown on the printer screen.',
     save: 'Save & connect', saved: 'Saved. Connecting…',
-    drop: 'Drop .gcode.3mf or .gcode files here', dropOr: 'or click to choose',
-    optSend: 'Send to Bambu Connect right away', optFast: 'Also remove the quick "mech mode fast check"',
-    working: 'Working…', error: 'Error: ', none: 'No vibration calibration commands found. File is unchanged.',
-    removed: n => `Removed ${n} calibration command${n > 1 ? 's' : ''}.`, opened: ' Opened in Bambu Connect → choose printer and press Print.',
-    stillDl: ' You can still download the cleaned file.', send: 'Send to Bambu Connect', sendAgain: 'Send again', download: 'Download',
+    sendTitle: 'Send a print', drop: 'Drop .gcode.3mf or .gcode files', dropOr: 'or press to choose a file',
+    optSend: 'Open in Bambu Connect right away', optFast: 'Also remove the quick "mech mode fast check"',
+    working: 'Working…', error: 'Error: ', none: 'No vibration calibration found. The file is unchanged.',
+    removed: n => `Removed ${n} calibration command${n > 1 ? 's' : ''}.`, opened: ' Opened in Bambu Connect: choose the printer and press Print.',
+    stillDl: ' You can still download the cleaned file.', send: 'Open in Bambu Connect', sendAgain: 'Open again', download: 'Download',
     whatTitle: 'What exactly gets changed?',
     what1: 'The X1 start G-code runs the resonance sweep with <code>M970</code> / <code>M970.3</code> and <code>M974</code>. NoCali comments those lines out, keeps <code>M975 S1</code> (use the stored compensation), and recomputes the <code>.md5</code> checksums inside <code>.gcode.3mf</code> files.',
-    what2: 'Cleaned files are kept for 7 days. In Bambu Connect\'s print window you can also untick "Vibration calibration"; with NoCali the commands are already gone.',
+    what2: 'Cleaned files are kept for 7 days. After moving the printer or changing belts, print once without NoCali so the calibration runs again.',
     states: { IDLE: 'Idle', PREPARE: 'Preparing', RUNNING: 'Printing', PAUSE: 'Paused', FINISH: 'Finished', FAILED: 'Failed', SLICING: 'Slicing', INIT: 'Starting' },
     speed: 'Speed', speeds: { silent: 'Silent', standard: 'Standard', sport: 'Sport', ludicrous: 'Ludicrous' },
-    partFan: 'Part fan', auxFan: 'Aux fan', chamberFan: 'Chamber fan', wifi: 'Wi-Fi', nozzleInfo: 'Nozzle', light: 'Light', on: 'on', off: 'off',
-    humidity: 'Humidity', ext: 'External spool', emptySlot: 'empty', active: 'printing', printError: 'Print error',
-    hmsLevels: { 1: 'Fatal', 2: 'Serious', 3: 'Warning', 4: 'Info' }, details: 'Details',
-    conn: { connecting: 'connecting…', reconnecting: 'reconnecting…', error: 'error', connected: 'connected' },
+    partFan: 'Part fan', auxFan: 'Aux fan', chamberFan: 'Chamber fan', wifi: 'Wi-Fi', nozzleInfo: 'Nozzle', light: 'Light', on: 'On', off: 'Off',
+    humidity: 'Humidity', ext: 'External spool', emptySlot: 'Empty', active: 'Printing', printError: 'Print error',
+    hmsLevels: { 1: 'Fatal', 2: 'Serious', 3: 'Warning', 4: 'Info' }, details: 'Bambu wiki',
+    conn: { connecting: 'Connecting…', reconnecting: 'Reconnecting…', error: 'Error', connected: 'Connected' },
   },
   de: {
-    sub: 'Lege eine geslicete Datei aus Bambu Studio ab. NoCali entfernt die X1-Vibrationskalibrierung und öffnet sie druckfertig in Bambu Connect.',
-    offline: 'Der NoCali-Helfer läuft nicht, deshalb kann nichts verarbeitet werden.',
-    layer: 'Schicht', remaining: 'Restzeit', eta: 'Fertig um', temps: 'Temperaturen', nozzle: 'Düse', bed: 'Bett', chamber: 'Bauraum',
-    machine: 'Drucker', camShow: 'Kamera anzeigen', camHide: 'Kamera ausblenden', camLoading: 'Verbinde mit der Kamera…',
+    language: 'Sprache', offline: 'Der NoCali-Helfer läuft nicht, deshalb kann nichts verarbeitet oder angezeigt werden.',
+    status: 'Druckerstatus', setupHint: 'Verbinde deinen Drucker, um hier Fortschritt, Temperaturen, AMS und Kamera zu sehen.', setup: 'Drucker verbinden',
+    progress: 'Druckfortschritt', layer: 'Schicht', remaining: 'Restzeit', eta: 'Fertig um', temps: 'Temperaturen', nozzle: 'Düse', bed: 'Bett', chamber: 'Bauraum',
+    machine: 'Drucker', camera: 'Kamera', camShow: 'Livebild starten', camStop: 'Stopp', camLoading: 'Verbinde mit der Kamera…',
     camNoFfmpeg: 'Für die Kamera wird ffmpeg benötigt. Installiere es (macOS: brew install ffmpeg) und starte NoCali neu.',
-    camNone: 'Dieser Drucker bietet keinen LAN-Kamerastream (am Drucker „LAN Mode Liveview“ einschalten).',
-    camErr: 'Kamerafehler: ', live: 'live', waiting: 'Verbunden, warte auf den ersten Bericht…',
-    settings: 'Druckereinstellungen', settingsHelp: 'Der Live-Status wird direkt im Heimnetz von deinem Drucker gelesen (nur lesend). Den Zugangscode findest du am Drucker unter Einstellungen → Netzwerk („Access Code“).',
-    find: 'Drucker im Netzwerk suchen', searching: 'Suche läuft…', notFound: 'Kein Drucker gefunden. Gib IP und Seriennummer von Hand ein (am Drucker: Einstellungen → Gerät).',
-    ip: 'IP-Adresse', serial: 'Seriennummer', name: 'Name', code: 'LAN-Zugangscode', codeSaved: 'gespeichert (leer lassen = behalten)', code8: '8 Zeichen',
+    camNone: 'Dieser Drucker bietet keinen LAN-Kamerastream. Schalte am Drucker „LAN Mode Liveview“ ein.',
+    camErr: 'Kamerafehler: ', live: 'Live', waiting: 'Verbunden, warte auf den ersten Bericht…', notConfigured: 'Kein Drucker',
+    settings: 'Druckereinstellungen', close: 'Schließen', settingsHelp: 'Der Live-Status wird direkt im Heimnetz von deinem Drucker gelesen (nur lesend). Den Zugangscode findest du am Drucker unter Einstellungen → Netzwerk („Access Code“).',
+    find: 'Drucker im Netzwerk suchen', searching: 'Suche läuft…', notFound: 'Kein Drucker gefunden. Gib IP-Adresse und Seriennummer von Hand ein (am Drucker: Einstellungen → Gerät).',
+    ip: 'IP-Adresse', serial: 'Seriennummer', name: 'Name (optional)', code: 'LAN-Zugangscode', codeSaved: 'Gespeichert. Leer lassen, um ihn zu behalten.', code8: '8 Zeichen, steht am Druckerbildschirm.',
     save: 'Speichern & verbinden', saved: 'Gespeichert. Verbinde…',
-    drop: '.gcode.3mf- oder .gcode-Dateien hier ablegen', dropOr: 'oder klicken zum Auswählen',
-    optSend: 'Direkt an Bambu Connect senden', optFast: 'Auch den kurzen „mech mode fast check“ entfernen',
-    working: 'Wird verarbeitet…', error: 'Fehler: ', none: 'Keine Kalibrierungsbefehle gefunden. Datei bleibt unverändert.',
-    removed: n => `${n} Kalibrierungsbefehl${n > 1 ? 'e' : ''} entfernt.`, opened: ' In Bambu Connect geöffnet → Drucker wählen und Drucken drücken.',
-    stillDl: ' Du kannst die bereinigte Datei trotzdem herunterladen.', send: 'An Bambu Connect senden', sendAgain: 'Erneut senden', download: 'Herunterladen',
+    sendTitle: 'Druck senden', drop: '.gcode.3mf- oder .gcode-Datei ablegen', dropOr: 'oder drücken, um eine Datei zu wählen',
+    optSend: 'Direkt in Bambu Connect öffnen', optFast: 'Auch den kurzen „mech mode fast check“ entfernen',
+    working: 'Wird verarbeitet…', error: 'Fehler: ', none: 'Keine Vibrationskalibrierung gefunden. Die Datei bleibt unverändert.',
+    removed: n => `${n} Kalibrierungsbefehl${n > 1 ? 'e' : ''} entfernt.`, opened: ' In Bambu Connect geöffnet: Drucker wählen und Drucken drücken.',
+    stillDl: ' Du kannst die bereinigte Datei trotzdem herunterladen.', send: 'In Bambu Connect öffnen', sendAgain: 'Erneut öffnen', download: 'Herunterladen',
     whatTitle: 'Was genau wird verändert?',
     what1: 'Der X1-Start-G-Code führt die Resonanzmessung mit <code>M970</code> / <code>M970.3</code> und <code>M974</code> aus. NoCali kommentiert diese Zeilen aus, behält <code>M975 S1</code> (gespeicherte Kompensation verwenden) und berechnet die <code>.md5</code>-Prüfsummen in <code>.gcode.3mf</code>-Dateien neu.',
-    what2: 'Bereinigte Dateien werden 7 Tage aufbewahrt. Im Druckfenster von Bambu Connect kannst du „Vibration calibration“ zusätzlich abwählen; mit NoCali sind die Befehle ohnehin entfernt.',
+    what2: 'Bereinigte Dateien werden 7 Tage aufbewahrt. Nach einem Umzug des Druckers oder neuen Riemen einmal ohne NoCali drucken, damit die Kalibrierung neu läuft.',
     states: { IDLE: 'Bereit', PREPARE: 'Vorbereitung', RUNNING: 'Druckt', PAUSE: 'Pausiert', FINISH: 'Fertig', FAILED: 'Fehlgeschlagen', SLICING: 'Slicen', INIT: 'Startet' },
     speed: 'Tempo', speeds: { silent: 'Leise', standard: 'Standard', sport: 'Sport', ludicrous: 'Ludicrous' },
-    partFan: 'Bauteillüfter', auxFan: 'Zusatzlüfter', chamberFan: 'Bauraumlüfter', wifi: 'WLAN', nozzleInfo: 'Düse', light: 'Licht', on: 'an', off: 'aus',
-    humidity: 'Feuchte', ext: 'Externe Spule', emptySlot: 'leer', active: 'druckt', printError: 'Druckfehler',
-    hmsLevels: { 1: 'Kritisch', 2: 'Schwer', 3: 'Warnung', 4: 'Info' }, details: 'Details',
-    conn: { connecting: 'verbinde…', reconnecting: 'verbinde neu…', error: 'Fehler', connected: 'verbunden' },
+    partFan: 'Bauteillüfter', auxFan: 'Zusatzlüfter', chamberFan: 'Bauraumlüfter', wifi: 'WLAN', nozzleInfo: 'Düse', light: 'Licht', on: 'An', off: 'Aus',
+    humidity: 'Feuchte', ext: 'Externe Spule', emptySlot: 'Leer', active: 'Druckt', printError: 'Druckfehler',
+    hmsLevels: { 1: 'Kritisch', 2: 'Schwer', 3: 'Warnung', 4: 'Info' }, details: 'Bambu-Wiki',
+    conn: { connecting: 'Verbinde…', reconnecting: 'Verbinde neu…', error: 'Fehler', connected: 'Verbunden' },
     stages: {
       0: 'Druckt', 1: 'Automatische Bettnivellierung', 2: 'Heizbett aufheizen', 3: 'Vibrationskompensation', 4: 'Filamentwechsel',
       5: 'M400-Pause', 6: 'Pausiert (Filament leer)', 7: 'Düse aufheizen', 8: 'Dynamische Flusskalibrierung', 9: 'Bettoberfläche scannen',
@@ -276,12 +471,12 @@ function applyLang() {
     const v = t(el.dataset.t);
     if (el.hasAttribute('data-html')) el.innerHTML = v; else el.textContent = v;
   });
-  document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
-  $('btnCam').textContent = camOn ? t('camHide') : t('camShow');
+  document.querySelectorAll('[data-t-label]').forEach(el => el.setAttribute('aria-label', t(el.dataset.tLabel)));
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
   loadConfig();
   if (lastStatus) render(lastStatus);
 }
-document.querySelectorAll('.lang button').forEach(b => b.onclick = () => {
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
   lang = b.dataset.lang; try { localStorage.setItem('lang', lang); } catch (e) {} applyLang(); poll();
 });
 
@@ -295,37 +490,38 @@ async function call(file, send) {
 }
 function card(file) {
   const div = document.createElement('div'); div.className = 'result';
-  div.innerHTML = '<h3></h3><div class="meta"></div><pre hidden></pre><div class="row"></div>';
-  div.querySelector('h3').textContent = file.name;
+  div.innerHTML = `<h3>${ICON('file', 'sm')}<span></span></h3><div class="rmeta"></div><pre hidden></pre><div class="row"></div>`;
+  div.querySelector('h3 span').textContent = file.name;
   $('out').prepend(div);
   return div;
 }
+function setMeta(meta, cls, icon, text) { meta.className = 'rmeta ' + cls; meta.innerHTML = icon ? ICON(icon, 'sm') : ''; meta.append(document.createTextNode(text)); }
 function show(div, file, r, err) {
-  const meta = div.querySelector('.meta'), pre = div.querySelector('pre'), row = div.querySelector('.row');
+  const meta = div.querySelector('.rmeta'), pre = div.querySelector('pre'), row = div.querySelector('.row');
   row.innerHTML = '';
-  if (err) { meta.className = 'meta err'; meta.textContent = t('error') + err; return; }
+  if (err) return setMeta(meta, 'err', 'alert', t('error') + err);
   const n = r.removed.length;
-  if (!n) { meta.className = 'meta warn'; meta.textContent = t('none'); }
-  else { meta.className = r.sent ? 'meta ok' : 'meta'; meta.textContent = t('removed')(n) + (r.sent ? t('opened') : ''); }
-  if (r.sendError) { meta.className = 'meta err'; meta.textContent += ' ' + r.sendError + t('stillDl'); }
+  if (r.sendError) setMeta(meta, 'err', 'alert', (n ? t('removed')(n) : '') + ' ' + r.sendError + t('stillDl'));
+  else if (!n) setMeta(meta, 'warn', 'info', t('none'));
+  else setMeta(meta, r.sent ? 'ok' : '', 'check', t('removed')(n) + (r.sent ? t('opened') : ''));
   if (n) { pre.hidden = false; pre.textContent = r.removed.map(x => `${x.where}:  ${x.code}`).join('\n'); }
-  const sendBtn = document.createElement('button');
-  sendBtn.textContent = r.sent ? t('sendAgain') : t('send');
-  if (r.sent) sendBtn.className = 'ghost';
+  const sendBtn = document.createElement('button'); sendBtn.type = 'button';
+  sendBtn.className = 'btn' + (r.sent ? ' secondary' : '');
+  sendBtn.innerHTML = ICON('send'); sendBtn.append(r.sent ? t('sendAgain') : t('send'));
   sendBtn.onclick = () => run(file, true, div);
-  const dl = document.createElement('a'); dl.className = 'btn ghost'; dl.textContent = t('download');
+  const dl = document.createElement('a'); dl.className = 'btn secondary'; dl.innerHTML = ICON('download'); dl.append(t('download'));
   dl.href = '/download?f=' + encodeURIComponent(r.outName);
   row.append(sendBtn, dl);
 }
 async function run(file, send, div) {
   div = div || card(file);
-  const meta = div.querySelector('.meta'); meta.className = 'meta'; meta.textContent = t('working');
+  setMeta(div.querySelector('.rmeta'), '', '', t('working'));
   try { show(div, file, await call(file, send)); } catch (e) { show(div, file, null, e.message); }
 }
 function handle(files) { for (const f of files) run(f, $('optSend').checked); }
 const drop = $('drop'), input = $('file');
 drop.onclick = () => input.click();
-drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') input.click(); };
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } };
 input.onchange = () => { handle([...input.files]); input.value = ''; };
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
@@ -337,66 +533,84 @@ for (const id of ['optSend', 'optFast']) {
 
 // ---------- printer status ----------
 let lastStatus = null, camOn = false;
-try { camOn = localStorage.getItem('cam') === '1'; } catch (e) {}
-const fmtT = (v, tg) => v == null ? '–' : Math.round(v) + '°' + (tg ? ' / ' + Math.round(tg) + '°' : '');
+const fmtT = v => v == null ? '–' : Math.round(v) + '°';
 function fmtMin(m) { if (m == null) return '–'; m = Math.max(0, m); const h = Math.floor(m / 60); return h ? `${h} h ${m % 60} min` : `${m} min`; }
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-function chip(label, value) { const c = el('span', 'chip'); c.append(el('span', null, label + ' '), document.createTextNode(value)); return c; }
+function setConn(cls, text, pulse) {
+  $('connDot').className = 'dot ' + cls + (pulse ? ' pulse' : '');
+  if ($('connText').textContent !== text) $('connText').textContent = text;
+}
 
 function render(s) {
-  const box = $('printer');
-  if (s.connection === 'not configured') { box.hidden = true; $('settings').open = true; return; }
-  box.hidden = false;
-  $('pName').textContent = s.printer.name || 'Printer ' + (s.printer.ip || '');
+  const configured = s.connection !== 'not configured';
+  $('statusEmpty').hidden = configured;
+  for (const id of ['cardTemps', 'cardMachine']) $(id).hidden = !configured || s.age == null;
+  if (!configured) {
+    setConn('', t('notConfigured'));
+    $('statusBody').hidden = true; $('cardCam').hidden = true; $('cardAms').hidden = true; $('pMsg').textContent = '';
+    $('pAlerts').innerHTML = ''; return;
+  }
   const live = s.connection === 'connected' && s.age != null && s.age < 60;
-  $('pDot').className = 'dot ' + (live ? 'on' : s.connection === 'error' ? 'bad' : '');
-  $('pConn').textContent = live ? t('live') : (t('conn')[s.connection] || s.connection);
-  $('pMsg').className = 'p-msg' + (s.error ? ' err' : ' muted');
+  setConn(live ? 'on' : s.connection === 'error' ? 'bad' : 'wait', live ? t('live') : (t('conn')[s.connection] || s.connection), live);
+  $('pMsg').className = 'p-msg' + (s.error ? ' err' : '');
   $('pMsg').textContent = s.error || (s.connection === 'connected' && s.age == null ? t('waiting') : '');
+  $('statusBody').hidden = s.age == null;
   updateCam(s);
   if (s.age == null) return;
 
   const active = ['RUNNING', 'PAUSE', 'PREPARE'].includes(s.state);
+  $('pName').textContent = s.printer.name || s.printer.ip || '';
   $('pState').textContent = t('states')[s.state] || s.state || '–';
   $('pJob').textContent = s.job || '';
-  const pct = s.percent ?? 0;
-  $('pBar').style.width = (active || s.state === 'FINISH' ? pct : 0) + '%';
-  $('pPct').textContent = s.percent != null ? pct + ' %' : '–';
-  $('pLayer').textContent = s.total_layers ? `${s.layer ?? 0} / ${s.total_layers}` : '–';
+  const pct = s.percent ?? 0, showPct = active || s.state === 'FINISH';
+  $('pPct').innerHTML = showPct ? `${pct}<small>%</small>` : '';
+  $('pBar').style.width = (showPct ? pct : 0) + '%';
+  $('pBarWrap').setAttribute('aria-valuenow', showPct ? pct : 0);
+  $('pLayer').textContent = s.total_layers ? `${s.layer ?? 0}/${s.total_layers}` : '–';
   $('pLeft').textContent = active ? fmtMin(s.remaining_min) : '–';
   $('pEta').textContent = active && s.remaining_min != null
     ? new Date(Date.now() + Math.max(0, s.remaining_min) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '–';
   const st = $('pStage'), stName = (T[lang].stages || {})[s.stage_id] || s.stage;
-  st.className = 'stage' + (s.stage_id === 3 ? ' cali' : '');
-  st.textContent = active && stName && s.stage_id !== 0 ? (s.stage_id === 3 ? '⚠ ' : '') + stName : '';
+  const showStage = active && stName && s.stage_id !== 0;
+  st.hidden = !showStage;
+  if (showStage) { st.className = 'stage' + (s.stage_id === 3 ? ' cali' : ''); st.innerHTML = ICON(s.stage_id === 3 ? 'alert' : 'info', 'sm'); st.append(stName); }
   document.title = active ? `${pct}% · NoCali` : 'NoCali';
 
-  // alerts
-  const al = $('pAlerts'); al.innerHTML = '';
+  // alerts (one role=alert container; rebuilt only when content changes)
   const alerts = [...(s.print_error ? [{ ...s.print_error, level: 2, label: t('printError') }] : []), ...(s.hms || [])];
-  for (const a of alerts) {
-    const d = el('div', 'alert lvl' + a.level);
-    d.append(el('b', null, (a.label || t('hmsLevels')[a.level] || 'HMS') + ': '));
-    d.append(document.createTextNode((a.text || '') + ' '));
-    const c = el('code', null, a.code + ' · '); const link = el('a', null, t('details'));
-    link.href = a.url; link.target = '_blank'; link.rel = 'noopener'; c.append(link); d.append(c);
-    al.append(d);
+  const key = lang + JSON.stringify(alerts.map(a => a.code));
+  if ($('pAlerts').dataset.key !== key) {
+    $('pAlerts').dataset.key = key; $('pAlerts').innerHTML = '';
+    for (const a of alerts) {
+      const d = el('div', 'alert lvl' + a.level);
+      d.innerHTML = ICON(a.level >= 4 ? 'info' : 'alert');
+      const body = el('div'); body.append(el('b', null, a.label || t('hmsLevels')[a.level] || 'HMS'), document.createTextNode(a.text || ''));
+      const meta = el('div', 'meta'); meta.append(el('span', 'mono', a.code));
+      const link = el('a'); link.href = a.url; link.target = '_blank'; link.rel = 'noopener'; link.innerHTML = ICON('ext', 'sm'); link.append(t('details'));
+      meta.append(link); body.append(meta); d.append(body); $('pAlerts').append(d);
+    }
   }
 
-  $('tNoz').textContent = fmtT(s.nozzle, s.nozzle_target);
-  $('tBed').textContent = fmtT(s.bed, s.bed_target);
+  const tg = v => v ? ` <span>/ ${Math.round(v)}°</span>` : '';
+  $('tNoz').innerHTML = fmtT(s.nozzle) + tg(s.nozzle_target);
+  $('tBed').innerHTML = fmtT(s.bed) + tg(s.bed_target);
   $('tCh').textContent = fmtT(s.chamber);
 
-  const chips = $('chips'); chips.innerHTML = '';
-  if (s.speed) chips.append(chip(t('speed'), (t('speeds')[s.speed] || s.speed) + (s.speed_pct ? ` (${s.speed_pct} %)` : '')));
-  const f = s.fans || {};
-  if (f.part != null) chips.append(chip(t('partFan'), f.part + ' %'));
-  if (f.aux != null) chips.append(chip(t('auxFan'), f.aux + ' %'));
-  if (f.chamber != null) chips.append(chip(t('chamberFan'), f.chamber + ' %'));
-  if (s.nozzle_diameter) chips.append(chip(t('nozzleInfo'), s.nozzle_diameter + ' mm'));
-  if (s.wifi) chips.append(chip(t('wifi'), s.wifi.replace('dBm', ' dBm')));
-  if (s.light) chips.append(chip(t('light'), s.light === 'on' ? t('on') : s.light === 'off' ? t('off') : s.light));
-
+  const kv = $('kv'); kv.innerHTML = '';
+  const add = (icon, label, value) => {
+    if (value == null || value === '') return;
+    const d = el('div'); d.innerHTML = ICON(icon, 'sm'); d.append(el('dt', null, label), el('dd', null, value)); kv.append(d);
+  };
+  add('gauge', t('speed'), s.speed ? (t('speeds')[s.speed] || s.speed) + (s.speed_pct ? ` ${s.speed_pct}%` : '') : null);
+  add('nozzle', t('nozzleInfo'), s.nozzle_diameter ? s.nozzle_diameter + ' mm' : null);
+  add('wifi', t('wifi'), s.wifi ? s.wifi.replace('dBm', ' dBm') : null);
+  add('bulb', t('light'), s.light ? (s.light === 'on' ? t('on') : s.light === 'off' ? t('off') : s.light) : null);
+  const fans = $('fans'); fans.innerHTML = ''; const f = s.fans || {};
+  for (const [k, label] of [['part', 'partFan'], ['aux', 'auxFan'], ['chamber', 'chamberFan']]) {
+    if (f[k] == null) continue;
+    const d = el('div'); d.append(el('span', null, t(label)), el('b', null, f[k] + '%'));
+    const bar = el('div', 'fanbar'); const fill = el('div'); fill.style.width = f[k] + '%'; bar.append(fill); d.append(bar); fans.append(d);
+  }
   renderAms(s.ams);
 }
 
@@ -408,20 +622,24 @@ function slotEl(tr, label) {
     sw.style.background = cols ? `conic-gradient(${cols.join(',')})` : (tr.color || 'transparent');
   }
   d.append(sw, el('b', null, tr.empty ? t('emptySlot') : tr.type));
-  d.append(el('small', null, tr.empty ? label : (tr.active ? '▶ ' + t('active') : (tr.name || label))));
-  if (!tr.empty && tr.remain != null) d.append(el('small', null, tr.remain + ' %'));
+  d.append(el('small', null, tr.active ? t('active') : (tr.empty ? label : (tr.name || label))));
+  if (!tr.empty && tr.remain != null) {
+    const r = el('div', 'rem'); const fill = el('div'); fill.style.width = tr.remain + '%'; r.append(fill);
+    r.setAttribute('role', 'img'); r.setAttribute('aria-label', tr.remain + '%'); d.append(r);
+  }
+  d.setAttribute('aria-label', `${label}: ${tr.empty ? t('emptySlot') : tr.type}${tr.active ? ', ' + t('active') : ''}${tr.remain != null ? ', ' + tr.remain + '%' : ''}`);
   return d;
 }
 function renderAms(a) {
   const box = $('ams'); box.innerHTML = '';
   const has = a && (a.units.length || a.external);
-  $('amsBox').hidden = !has;
+  $('cardAms').hidden = !has;
   if (!has) return;
   for (const u of a.units) {
     const w = el('div', 'ams-unit');
     const h = el('div', 'ams-head'); h.append(el('b', null, u.label));
-    if (u.humidity != null) h.append(el('span', null, `${t('humidity')} ${u.humidity} %`));
-    if (u.temp != null) h.append(el('span', null, `${Math.round(u.temp)}°`));
+    if (u.humidity != null) { const sp = el('span'); sp.innerHTML = ICON('drop', 'sm'); sp.append(`${t('humidity')} ${u.humidity}%`); h.append(sp); }
+    if (u.temp != null) { const sp = el('span'); sp.innerHTML = ICON('therm', 'sm'); sp.append(`${Math.round(u.temp)}°`); h.append(sp); }
     const slots = el('div', 'slots');
     u.trays.forEach((tr, i) => slots.append(slotEl(tr, `${'ABCD'[u.id % 4] || u.id}${i + 1}`)));
     w.append(h, slots); box.append(w);
@@ -433,58 +651,65 @@ function renderAms(a) {
   }
 }
 
-// camera
+// camera: click-to-play, stops when hidden
 function updateCam(s) {
-  const cam = $('cam'), img = $('camImg'), msg = $('camMsg');
-  $('btnCam').hidden = !s.camera && !camOn;
-  cam.classList.toggle('on', camOn);
-  if (!camOn) { if (img.src) img.removeAttribute('src'); return; }
-  if (!s.camera_ffmpeg) { msg.textContent = t('camNoFfmpeg'); img.removeAttribute('src'); return; }
-  if (!s.camera) { msg.textContent = s.age == null ? t('camLoading') : t('camNone'); return; }
-  if (!img.getAttribute('src')) { msg.textContent = t('camLoading'); img.src = '/camera.mjpg?ts=' + Date.now(); }
+  $('cardCam').hidden = !(s.camera || camOn);
+  const img = $('camImg'), ov = $('camOverlay'), msg = $('camMsg');
+  $('btnCamStop').hidden = !camOn; $('btnCamPlay').hidden = camOn;
+  if (!camOn) { img.hidden = true; img.removeAttribute('src'); ov.hidden = false; msg.textContent = ''; return; }
+  if (!s.camera_ffmpeg) { ov.hidden = false; msg.textContent = t('camNoFfmpeg'); return; }
+  if (!s.camera) { ov.hidden = false; msg.textContent = t('camNone'); return; }
+  if (!img.getAttribute('src')) { ov.hidden = false; msg.textContent = t('camLoading'); img.src = '/camera.mjpg?ts=' + Date.now(); }
 }
-$('camImg').onload = () => { $('camMsg').textContent = ''; };
+$('camImg').onload = () => { $('camImg').hidden = false; $('camOverlay').hidden = true; };
 $('camImg').onerror = async () => {
-  const img = $('camImg'); img.removeAttribute('src');
+  const img = $('camImg'); img.removeAttribute('src'); img.hidden = true; $('camOverlay').hidden = false;
   try { const r = await fetch('/camera.jpg'); if (!r.ok) $('camMsg').textContent = t('camErr') + (await r.json()).error; } catch (e) {}
   setTimeout(() => { if (camOn && lastStatus) updateCam(lastStatus); }, 5000);
 };
-$('btnCam').onclick = () => {
-  camOn = !camOn; try { localStorage.setItem('cam', camOn ? '1' : '0'); } catch (e) {}
-  $('btnCam').textContent = camOn ? t('camHide') : t('camShow');
-  if (lastStatus) updateCam(lastStatus);
-};
+$('camImg').alt = '';
+function setCam(on) { camOn = on; if (lastStatus) updateCam(lastStatus); }
+$('btnCamPlay').onclick = () => setCam(true);
+$('btnCamStop').onclick = () => setCam(false);
+document.addEventListener('visibilitychange', () => { if (document.hidden && camOn) setCam(false); });
 
 async function poll() {
   try {
     const s = await (await fetch('/status?lang=' + lang)).json();
-    lastStatus = s; $('offline').style.display = 'none'; render(s);
-  } catch (e) { $('offline').style.display = 'block'; }
+    lastStatus = s; $('offline').hidden = true; render(s);
+  } catch (e) { $('offline').hidden = false; setConn('bad', t('conn').error); }
 }
 
-// ---------- settings ----------
+// ---------- settings dialog ----------
+const dlg = $('dlgSettings');
+function openSettings() { $('cfgMsg').textContent = ''; loadConfig(); dlg.showModal(); }
+$('btnSettings').onclick = openSettings;
+$('btnSetup').onclick = openSettings;
+$('btnClose').onclick = () => dlg.close();
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
 async function loadConfig() {
   try {
     const c = await (await fetch('/config')).json();
-    if (document.activeElement && document.activeElement.form === $('cfgForm')) return;
+    if (dlg.open && document.activeElement && document.activeElement.form === $('cfgForm')) return;
     $('cIp').value = c.ip; $('cSerial').value = c.serial; $('cName').value = c.name;
-    $('cCode').placeholder = c.hasCode ? t('codeSaved') : t('code8');
+    $('codeHint').textContent = c.hasCode ? t('codeSaved') : t('code8');
   } catch (e) {}
 }
 $('btnFind').onclick = async () => {
   const b = $('btnFind'), f = $('found');
-  b.disabled = true; b.textContent = t('searching'); f.innerHTML = '';
+  b.disabled = true; b.lastElementChild.textContent = t('searching'); f.innerHTML = '';
   try {
     const r = await (await fetch('/discover')).json();
     if (r.error) throw new Error(r.error);
-    if (!r.printers.length) f.textContent = t('notFound');
+    if (!r.printers.length) f.append(el('p', 'help', t('notFound')));
     for (const p of r.printers) {
-      const btn = el('button', 'ghost', `${p.name || p.model} · ${p.ip} · ${p.serial}`); btn.type = 'button';
+      const btn = el('button', 'btn secondary'); btn.type = 'button'; btn.innerHTML = ICON('box');
+      btn.append(`${p.name || p.model} · ${p.ip}`);
       btn.onclick = () => { $('cIp').value = p.ip; $('cSerial').value = p.serial; if (!$('cName').value) $('cName').value = p.name; $('cCode').focus(); };
       f.append(btn);
     }
-  } catch (e) { f.textContent = e.message; }
-  b.disabled = false; b.textContent = t('find');
+  } catch (e) { f.append(el('p', 'help', e.message)); }
+  b.disabled = false; b.lastElementChild.textContent = t('find');
 };
 $('cfgForm').onsubmit = async e => {
   e.preventDefault();
@@ -492,12 +717,9 @@ $('cfgForm').onsubmit = async e => {
   const body = { ip: $('cIp').value, serial: $('cSerial').value, name: $('cName').value, code: $('cCode').value };
   const res = await fetch('/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const j = await res.json();
-  msg.className = res.ok ? 'muted' : 'err';
+  msg.className = 'form-msg ' + (res.ok ? 'ok' : 'err');
   msg.textContent = res.ok ? t('saved') : j.error;
-  if (res.ok) {
-    $('cCode').value = ''; $('camImg').removeAttribute('src'); loadConfig();
-    setTimeout(() => { $('settings').open = false; msg.textContent = ''; }, 1500); poll();
-  }
+  if (res.ok) { $('cCode').value = ''; setCam(false); loadConfig(); setTimeout(() => dlg.close(), 900); poll(); }
 };
 
 fetch('/health').then(r => r.json()).then(h => { $('ver').textContent = 'v' + h.version; }).catch(() => {});
