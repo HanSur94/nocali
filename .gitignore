@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+printer.json
+*.gcode
+*.gcode.3mf
+.claude/

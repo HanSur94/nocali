@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoCali for X1C</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f7f5; --card: #ffffff; --text: #1c1f1d; --muted: #6b716d;
+    --line: #dfe3df; --accent: #00ae42; --accent-ink: #ffffff; --warn: #b45309; --code: #f0f2ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121413; --card: #1b1e1c; --text: #e8ebe8; --muted: #9aa19c;
+      --line: #2c312e; --accent: #1fc95c; --accent-ink: #0b0d0c; --warn: #f59e0b; --code: #232724; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  #drop { border: 2px dashed var(--line); border-radius: 14px; background: var(--card);
+    padding: 44px 20px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+  #drop.over { border-color: var(--accent); }
+  #drop strong { display: block; font-size: 17px; margin-bottom: 4px; }
+  #drop span { color: var(--muted); font-size: 14px; }
+  .opts { display: flex; gap: 18px; flex-wrap: wrap; margin: 16px 2px 0; color: var(--muted); font-size: 14px; }
+  .opts label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .result { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-top: 18px; }
+  .result h3 { margin: 0 0 6px; font-size: 15px; word-break: break-all; }
+  .result .meta { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .result.none .meta { color: var(--warn); }
+  pre { background: var(--code); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-x: auto; max-height: 220px; }
+  button, a.btn { appearance: none; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-weight: 600; padding: 8px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+  details { margin-top: 36px; color: var(--muted); font-size: 14px; }
+  details code { background: var(--code); padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>NoCali</h1>
+  <p class="sub">Strip the vibration (resonance) calibration from Bambu Studio G-code for the X1C before you send it. Everything runs locally in your browser.</p>
+
+  <div id="drop" tabindex="0">
+    <strong>Drop .gcode or .gcode.3mf files here</strong>
+    <span>or click to choose</span>
+    <input id="file" type="file" accept=".gcode,.3mf" multiple hidden>
+  </div>
+
+  <div class="opts">
+    <label><input type="checkbox" id="optCheck" checked> Also remove the quick "mech mode fast check"</label>
+  </div>
+
+  <div id="out"></div>
+
+  <details>
+    <summary>What exactly gets changed?</summary>
+    <p>The X1C start G-code runs the resonance sweep with <code>M970</code> / <code>M970.3</code> (shake the axis) and
+    <code>M974</code> (fit the result). NoCali comments those lines out (<code>; [NoCali] M970 …</code>) so line numbers and
+    everything else stay intact. <code>M975 S1</code> (turn vibration compensation <em>on</em>) is kept, so the printer keeps using
+    its last stored calibration.</p>
+    <p>For <code>.gcode.3mf</code> files, every <code>Metadata/plate_N.gcode</code> is patched and its <code>.md5</code> checksum file is
+    recomputed, otherwise the printer refuses the file.</p>
+  </details>
+</main>
+
+<script>
+// Matches M970, M970.3, M974 at the start of a (possibly indented) line.
+const CALI_RE = /^(\s*)(M97[04](?:\.\d+)?)(\s|;|$)/i;
+
+/**
+ * Patch gcode text. Returns { text, removed: [{line, code}] }.
+ * removeFastCheck=false keeps lines inside the ";===== mech mode fast check" section.
+ */
+function patchGcode(text, removeFastCheck = true) {
+  const lines = text.split('\n');
+  const removed = [];
+  let section = '';
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    const hdr = l.match(/^\s*;\s*=+\s*(.*?)\s*=*\s*$/);
+    if (hdr && hdr[1]) section = hdr[1].toLowerCase();
+    if (!CALI_RE.test(l)) continue;
+    if (!removeFastCheck && section.includes('fast check')) continue;
+    removed.push({ line: i + 1, code: l.trim() });
+    lines[i] = l.replace(CALI_RE, '$1; [NoCali] $2$3');
+  }
+  return { text: lines.join('\n'), removed };
+}
+
+async function processFile(file, removeFastCheck) {
+  const name = file.name;
+  if (/\.3mf$/i.test(name)) {
+    const zip = await JSZip.loadAsync(file, { createFolders: false });
+    const plates = Object.keys(zip.files).filter(p => /^Metadata\/plate_\d+\.gcode$/i.test(p));
+    if (!plates.length) throw new Error('No sliced plate G-code found. Export with "Export plate sliced file" (.gcode.3mf).');
+    let removed = [];
+    for (const p of plates) {
+      const src = await zip.file(p).async('string');
+      const res = patchGcode(src, removeFastCheck);
+      if (!res.removed.length) continue;
+      res.removed.forEach(r => r.plate = p.match(/plate_(\d+)/)[1]);
+      removed = removed.concat(res.removed);
+      zip.file(p, res.text, { createFolders: false });
+      const md5Path = p + '.md5';
+      const md5File = zip.file(md5Path);
+      if (md5File) {
+        const old = (await md5File.async('string')).trim();
+        let sum = SparkMD5.hash(utf8(res.text));
+        sum = old === old.toLowerCase() ? sum : sum.toUpperCase();
+        zip.file(md5Path, sum, { createFolders: false });
+      }
+    }
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', mimeType: 'application/vnd.ms-package.3dmanufacturing-3dmodel+xml' });
+    return { name, outName: name.replace(/(\.gcode)?\.3mf$/i, '.nocali$1.3mf'), removed, blob };
+  }
+  const res = patchGcode(await file.text(), removeFastCheck);
+  return { name, outName: name.replace(/\.gcode$/i, '') + '.nocali.gcode', removed: res.removed,
+           blob: new Blob([res.text], { type: 'text/plain' }) };
+}
+
+// SparkMD5.hash expects a JS string; encode to a UTF-8 binary string for correct bytes.
+function utf8(s) { return unescape(encodeURIComponent(s)); }
+
+function render(r) {
+  const div = document.createElement('div');
+  div.className = 'result' + (r.removed.length ? '' : ' none');
+  const h = document.createElement('h3'); h.textContent = r.name; div.append(h);
+  const meta = document.createElement('div'); meta.className = 'meta';
+  meta.textContent = r.error ? 'Error: ' + r.error
+    : r.removed.length ? `Removed ${r.removed.length} calibration command${r.removed.length > 1 ? 's' : ''}.`
+    : 'No vibration calibration commands found. File left unchanged.';
+  div.append(meta);
+  if (r.removed.length) {
+    const pre = document.createElement('pre');
+    pre.textContent = r.removed.map(x => `${x.plate ? 'plate ' + x.plate + ' ' : ''}line ${x.line}:  ${x.code}`).join('\n');
+    div.append(pre);
+    const a = document.createElement('a'); a.className = 'btn'; a.textContent = 'Download ' + r.outName;
+    a.href = URL.createObjectURL(r.blob); a.download = r.outName; div.append(a);
+  }
+  document.getElementById('out').prepend(div);
+}
+
+async function handle(files) {
+  const fast = document.getElementById('optCheck').checked;
+  for (const f of files) {
+    try { render(await processFile(f, fast)); }
+    catch (e) { render({ name: f.name, removed: [], error: e.message }); }
+  }
+}
+
+const drop = document.getElementById('drop'), input = document.getElementById('file');
+drop.onclick = () => input.click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') input.click(); };
+input.onchange = () => { handle(input.files); input.value = ''; };
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => handle(e.dataTransfer.files));
+</script>
+</body>
+</html>

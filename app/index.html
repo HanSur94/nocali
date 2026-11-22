@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoCali</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2300ae42'/%3E%3Cpath d='M8 16h4l2-6 4 12 2-6h4' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f6f7f5; --card: #ffffff; --text: #1c1f1d; --muted: #6b716d; --line: #dfe3df;
+    --accent: #00ae42; --accent-ink: #ffffff; --warn: #b45309; --err: #c0392b; --code: #f0f2ef; --chip: #f0f2ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121413; --card: #1b1e1c; --text: #e8ebe8; --muted: #9aa19c; --line: #2c312e;
+      --accent: #1fc95c; --accent-ink: #0b0d0c; --warn: #f59e0b; --err: #ff6b5b; --code: #232724; --chip: #232724; }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .lang { display: flex; gap: 4px; }
+  .lang button { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 2px 8px; font-size: 12px; font-weight: 600; }
+  .lang button.on { color: var(--text); border-color: var(--text); }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+  button, a.btn { appearance: none; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-weight: 600; padding: 8px 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+  button.ghost, a.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button:disabled { opacity: .6; cursor: default; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .muted { color: var(--muted); }
+  .err { color: var(--err); } .warn { color: var(--warn); } .ok { color: var(--accent); }
+
+  /* printer */
+  .p-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .p-name { font-weight: 600; }
+  .p-conn { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .dot.on { background: var(--accent); } .dot.bad { background: var(--err); }
+  .p-state { font-size: 22px; font-weight: 700; margin: 10px 0 2px; letter-spacing: -0.01em; }
+  .p-job { color: var(--muted); font-size: 14px; word-break: break-all; }
+  .bar { height: 10px; background: var(--code); border-radius: 6px; overflow: hidden; margin: 12px 0 6px; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .6s; }
+  .p-nums { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); flex-wrap: wrap; gap: 4px 16px; }
+  .p-nums b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .stage { margin-top: 10px; font-size: 14px; }
+  .stage.cali { color: var(--warn); font-weight: 600; }
+  .alerts { margin-top: 12px; display: grid; gap: 8px; }
+  .alert { border: 1px solid var(--err); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+  .alert.lvl3, .alert.lvl4 { border-color: var(--warn); }
+  .alert code { font-size: 12px; color: var(--muted); }
+  .alert a { color: inherit; }
+  .cam { margin-top: 14px; position: relative; background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16 / 9; display: none; }
+  .cam.on { display: block; }
+  .cam img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .cam .cam-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 14px; padding: 16px; text-align: center; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tile { background: var(--code); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+  .tile small { display: block; color: var(--muted); font-size: 12px; }
+  .tile b { font-size: 16px; font-variant-numeric: tabular-nums; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--chip); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
+  .chip span { color: var(--muted); }
+  .ams-unit { margin-top: 8px; }
+  .ams-head { font-size: 13px; color: var(--muted); display: flex; gap: 12px; margin-bottom: 6px; }
+  .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .slot { border: 2px solid transparent; border-radius: 10px; background: var(--code); padding: 8px; text-align: center; font-size: 13px; min-width: 0; }
+  .slot.active { border-color: var(--accent); }
+  .swatch { width: 34px; height: 34px; border-radius: 50%; margin: 2px auto 6px; border: 1px solid rgba(128,128,128,.4); }
+  .slot.empty .swatch { background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(128,128,128,.3) 4px 6px); }
+  .slot b { display: block; }
+  .slot small { color: var(--muted); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* settings + drop */
+  details.settings { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+  details.settings[open] { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; color: var(--text); }
+  summary { cursor: pointer; }
+  form.cfg { display: grid; gap: 10px; margin-top: 12px; }
+  form.cfg label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  form.cfg input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .found { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .found button { text-align: left; }
+  #drop { border: 2px dashed var(--line); border-radius: 14px; background: var(--card);
+    padding: 40px 20px; text-align: center; cursor: pointer; transition: border-color .15s; }
+  #drop.over { border-color: var(--accent); }
+  #drop strong { display: block; font-size: 17px; margin-bottom: 4px; }
+  #drop span { color: var(--muted); font-size: 14px; }
+  .opts { display: flex; gap: 8px 22px; flex-wrap: wrap; margin: 14px 2px 0; color: var(--muted); font-size: 14px; }
+  .opts label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .result { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-top: 18px; }
+  .result h3 { margin: 0 0 6px; font-size: 15px; word-break: break-all; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .meta.ok { color: var(--accent); font-weight: 600; }
+  pre { background: var(--code); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-x: auto; max-height: 200px; }
+  #offline { display: none; border: 1px solid var(--err); color: var(--err); }
+  details.info { margin-top: 32px; color: var(--muted); font-size: 14px; }
+  details.info code { background: var(--code); padding: 1px 5px; border-radius: 4px; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 12px; text-align: center; }
+  footer a { color: inherit; }
+  @media (max-width: 560px) {
+    .grid3 { grid-template-columns: repeat(2, 1fr); }
+    .slots { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>NoCali</h1>
+    <div class="lang"><button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button></div>
+  </header>
+  <p class="sub" data-t="sub"></p>
+
+  <div class="card" id="offline" data-t="offline"></div>
+
+  <section class="card" id="printer" hidden>
+    <div class="p-head">
+      <span class="p-name" id="pName"></span>
+      <span class="p-conn"><span class="dot" id="pDot"></span><span id="pConn"></span></span>
+    </div>
+    <div class="p-state" id="pState">–</div>
+    <div class="p-job" id="pJob"></div>
+    <div class="bar"><div id="pBar"></div></div>
+    <div class="p-nums">
+      <span><b id="pPct">–</b></span>
+      <span><span data-t="layer"></span> <b id="pLayer">–</b></span>
+      <span><span data-t="remaining"></span> <b id="pLeft">–</b></span>
+      <span><span data-t="eta"></span> <b id="pEta">–</b></span>
+    </div>
+    <div class="stage" id="pStage"></div>
+    <div class="alerts" id="pAlerts"></div>
+    <div class="p-msg muted" id="pMsg"></div>
+
+    <div class="row" style="margin-top:12px">
+      <button type="button" class="ghost" id="btnCam" data-t="camShow"></button>
+    </div>
+    <div class="cam" id="cam"><img id="camImg" alt=""><div class="cam-msg" id="camMsg"></div></div>
+
+    <h2 data-t="temps"></h2>
+    <div class="grid3">
+      <div class="tile"><small data-t="nozzle"></small><b id="tNoz">–</b></div>
+      <div class="tile"><small data-t="bed"></small><b id="tBed">–</b></div>
+      <div class="tile"><small data-t="chamber"></small><b id="tCh">–</b></div>
+    </div>
+
+    <h2 data-t="machine"></h2>
+    <div class="chips" id="chips"></div>
+
+    <div id="amsBox" hidden>
+      <h2>AMS</h2>
+      <div id="ams"></div>
+    </div>
+  </section>
+
+  <details class="settings" id="settings">
+    <summary data-t="settings"></summary>
+    <p class="muted" data-t="settingsHelp"></p>
+    <button type="button" class="ghost" id="btnFind" data-t="find"></button>
+    <div class="found" id="found"></div>
+    <form class="cfg" id="cfgForm">
+      <label><span data-t="ip"></span><input id="cIp" required placeholder="192.168.1.50" autocomplete="off"></label>
+      <label><span data-t="serial"></span><input id="cSerial" required autocomplete="off"></label>
+      <label><span data-t="name"></span><input id="cName" placeholder="X1 Carbon" autocomplete="off"></label>
+      <label><span data-t="code"></span><input id="cCode" type="password" autocomplete="off"></label>
+      <div class="row"><button type="submit" data-t="save"></button></div>
+      <div class="muted" id="cfgMsg"></div>
+    </form>
+  </details>
+
+  <div id="drop" tabindex="0">
+    <strong data-t="drop"></strong>
+    <span data-t="dropOr"></span>
+    <input id="file" type="file" accept=".gcode,.3mf" multiple hidden>
+  </div>
+  <div class="opts">
+    <label><input type="checkbox" id="optSend" checked> <span data-t="optSend"></span></label>
+    <label><input type="checkbox" id="optFast" checked> <span data-t="optFast"></span></label>
+  </div>
+  <div id="out"></div>
+
+  <details class="info">
+    <summary data-t="whatTitle"></summary>
+    <p data-t="what1" data-html></p>
+    <p data-t="what2" data-html></p>
+  </details>
+  <footer>NoCali <span id="ver"></span> · <a href="https://github.com/HanSur94/nocali" target="_blank" rel="noopener">GitHub</a></footer>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ---------- i18n ----------
+const T = {
+  en: {
+    sub: 'Drop a sliced file from Bambu Studio. NoCali removes the X1 vibration calibration and opens it in Bambu Connect, ready to print.',
+    offline: 'The NoCali helper isn\'t running, so nothing can be processed.',
+    layer: 'Layer', remaining: 'Remaining', eta: 'Done at', temps: 'Temperatures', nozzle: 'Nozzle', bed: 'Bed', chamber: 'Chamber',
+    machine: 'Printer', camShow: 'Show camera', camHide: 'Hide camera', camLoading: 'Connecting to camera…',
+    camNoFfmpeg: 'The camera needs ffmpeg. Install it (macOS: brew install ffmpeg) and restart NoCali.',
+    camNone: 'This printer doesn\'t offer a LAN camera stream (enable "LAN Mode Liveview" on the printer).',
+    camErr: 'Camera error: ', live: 'live', waiting: 'Connected, waiting for the first report…',
+    settings: 'Printer settings', settingsHelp: 'Live status is read directly from your printer on your home network (read-only). The access code is on the printer screen: Settings → Network ("Access Code").',
+    find: 'Find printer on network', searching: 'Searching…', notFound: 'No printer found. Enter the IP and serial manually (printer screen: Settings → Device).',
+    ip: 'IP address', serial: 'Serial number', name: 'Name', code: 'LAN access code', codeSaved: 'saved (leave empty to keep)', code8: '8 characters',
+    save: 'Save & connect', saved: 'Saved. Connecting…',
+    drop: 'Drop .gcode.3mf or .gcode files here', dropOr: 'or click to choose',
+    optSend: 'Send to Bambu Connect right away', optFast: 'Also remove the quick "mech mode fast check"',
+    working: 'Working…', error: 'Error: ', none: 'No vibration calibration commands found. File is unchanged.',
+    removed: n => `Removed ${n} calibration command${n > 1 ? 's' : ''}.`, opened: ' Opened in Bambu Connect → choose printer and press Print.',
+    stillDl: ' You can still download the cleaned file.', send: 'Send to Bambu Connect', sendAgain: 'Send again', download: 'Download',
+    whatTitle: 'What exactly gets changed?',
+    what1: 'The X1 start G-code runs the resonance sweep with <code>M970</code> / <code>M970.3</code> and <code>M974</code>. NoCali comments those lines out, keeps <code>M975 S1</code> (use the stored compensation), and recomputes the <code>.md5</code> checksums inside <code>.gcode.3mf</code> files.',
+    what2: 'Cleaned files are kept for 7 days. In Bambu Connect\'s print window you can also untick "Vibration calibration"; with NoCali the commands are already gone.',
+    states: { IDLE: 'Idle', PREPARE: 'Preparing', RUNNING: 'Printing', PAUSE: 'Paused', FINISH: 'Finished', FAILED: 'Failed', SLICING: 'Slicing', INIT: 'Starting' },
+    speed: 'Speed', speeds: { silent: 'Silent', standard: 'Standard', sport: 'Sport', ludicrous: 'Ludicrous' },
+    partFan: 'Part fan', auxFan: 'Aux fan', chamberFan: 'Chamber fan', wifi: 'Wi-Fi', nozzleInfo: 'Nozzle', light: 'Light', on: 'on', off: 'off',
+    humidity: 'Humidity', ext: 'External spool', emptySlot: 'empty', active: 'printing', printError: 'Print error',
+    hmsLevels: { 1: 'Fatal', 2: 'Serious', 3: 'Warning', 4: 'Info' }, details: 'Details',
+    conn: { connecting: 'connecting…', reconnecting: 'reconnecting…', error: 'error', connected: 'connected' },
+  },
+  de: {
+    sub: 'Lege eine geslicete Datei aus Bambu Studio ab. NoCali entfernt die X1-Vibrationskalibrierung und öffnet sie druckfertig in Bambu Connect.',
+    offline: 'Der NoCali-Helfer läuft nicht, deshalb kann nichts verarbeitet werden.',
+    layer: 'Schicht', remaining: 'Restzeit', eta: 'Fertig um', temps: 'Temperaturen', nozzle: 'Düse', bed: 'Bett', chamber: 'Bauraum',
+    machine: 'Drucker', camShow: 'Kamera anzeigen', camHide: 'Kamera ausblenden', camLoading: 'Verbinde mit der Kamera…',
+    camNoFfmpeg: 'Für die Kamera wird ffmpeg benötigt. Installiere es (macOS: brew install ffmpeg) und starte NoCali neu.',
+    camNone: 'Dieser Drucker bietet keinen LAN-Kamerastream (am Drucker „LAN Mode Liveview“ einschalten).',
+    camErr: 'Kamerafehler: ', live: 'live', waiting: 'Verbunden, warte auf den ersten Bericht…',
+    settings: 'Druckereinstellungen', settingsHelp: 'Der Live-Status wird direkt im Heimnetz von deinem Drucker gelesen (nur lesend). Den Zugangscode findest du am Drucker unter Einstellungen → Netzwerk („Access Code“).',
+    find: 'Drucker im Netzwerk suchen', searching: 'Suche läuft…', notFound: 'Kein Drucker gefunden. Gib IP und Seriennummer von Hand ein (am Drucker: Einstellungen → Gerät).',
+    ip: 'IP-Adresse', serial: 'Seriennummer', name: 'Name', code: 'LAN-Zugangscode', codeSaved: 'gespeichert (leer lassen = behalten)', code8: '8 Zeichen',
+    save: 'Speichern & verbinden', saved: 'Gespeichert. Verbinde…',
+    drop: '.gcode.3mf- oder .gcode-Dateien hier ablegen', dropOr: 'oder klicken zum Auswählen',
+    optSend: 'Direkt an Bambu Connect senden', optFast: 'Auch den kurzen „mech mode fast check“ entfernen',
+    working: 'Wird verarbeitet…', error: 'Fehler: ', none: 'Keine Kalibrierungsbefehle gefunden. Datei bleibt unverändert.',
+    removed: n => `${n} Kalibrierungsbefehl${n > 1 ? 'e' : ''} entfernt.`, opened: ' In Bambu Connect geöffnet → Drucker wählen und Drucken drücken.',
+    stillDl: ' Du kannst die bereinigte Datei trotzdem herunterladen.', send: 'An Bambu Connect senden', sendAgain: 'Erneut senden', download: 'Herunterladen',
+    whatTitle: 'Was genau wird verändert?',
+    what1: 'Der X1-Start-G-Code führt die Resonanzmessung mit <code>M970</code> / <code>M970.3</code> und <code>M974</code> aus. NoCali kommentiert diese Zeilen aus, behält <code>M975 S1</code> (gespeicherte Kompensation verwenden) und berechnet die <code>.md5</code>-Prüfsummen in <code>.gcode.3mf</code>-Dateien neu.',
+    what2: 'Bereinigte Dateien werden 7 Tage aufbewahrt. Im Druckfenster von Bambu Connect kannst du „Vibration calibration“ zusätzlich abwählen; mit NoCali sind die Befehle ohnehin entfernt.',
+    states: { IDLE: 'Bereit', PREPARE: 'Vorbereitung', RUNNING: 'Druckt', PAUSE: 'Pausiert', FINISH: 'Fertig', FAILED: 'Fehlgeschlagen', SLICING: 'Slicen', INIT: 'Startet' },
+    speed: 'Tempo', speeds: { silent: 'Leise', standard: 'Standard', sport: 'Sport', ludicrous: 'Ludicrous' },
+    partFan: 'Bauteillüfter', auxFan: 'Zusatzlüfter', chamberFan: 'Bauraumlüfter', wifi: 'WLAN', nozzleInfo: 'Düse', light: 'Licht', on: 'an', off: 'aus',
+    humidity: 'Feuchte', ext: 'Externe Spule', emptySlot: 'leer', active: 'druckt', printError: 'Druckfehler',
+    hmsLevels: { 1: 'Kritisch', 2: 'Schwer', 3: 'Warnung', 4: 'Info' }, details: 'Details',
+    conn: { connecting: 'verbinde…', reconnecting: 'verbinde neu…', error: 'Fehler', connected: 'verbunden' },
+    stages: {
+      0: 'Druckt', 1: 'Automatische Bettnivellierung', 2: 'Heizbett aufheizen', 3: 'Vibrationskompensation', 4: 'Filamentwechsel',
+      5: 'M400-Pause', 6: 'Pausiert (Filament leer)', 7: 'Düse aufheizen', 8: 'Dynamische Flusskalibrierung', 9: 'Bettoberfläche scannen',
+      10: 'Erste Schicht prüfen', 11: 'Druckplatte erkennen', 12: 'Micro-Lidar kalibrieren', 13: 'Druckkopf referenzieren',
+      14: 'Düsenspitze reinigen', 15: 'Extrudertemperatur prüfen', 16: 'Vom Benutzer pausiert', 17: 'Pause (Frontabdeckung abgefallen)',
+      18: 'Micro-Lidar kalibrieren', 19: 'Flussrate kalibrieren', 20: 'Pause (Düsentemperatur gestört)', 21: 'Pause (Betttemperatur gestört)',
+      22: 'Filament entladen', 23: 'Pause (Schrittverlust)', 24: 'Filament laden', 25: 'Motorgeräusch-Kalibrierung', 26: 'Pause (AMS offline)',
+      27: 'Pause (Heatbreak-Lüfter zu langsam)', 28: 'Pause (Bauraumtemperatur-Problem)', 29: 'Bauraum kühlen', 30: 'Pause (G-Code des Benutzers)',
+      32: 'Pause (Düsenverklumpung)', 33: 'Pause (Schneidefehler)', 34: 'Pause (Fehler erste Schicht)', 35: 'Pause (Düse verstopft)',
+      40: 'Hochtemperatur-Bettnivellierung', 47: 'Bettnivellierung – Phase 1', 48: 'Bettnivellierung – Phase 2', 49: 'Bauraum heizen',
+      50: 'Betttemperatur anpassen', 51: 'Kalibrierlinien drucken', 52: 'Automatische Prüfung: Material', 54: 'Warten, bis das Heizbett die Zieltemperatur erreicht',
+      55: 'Automatische Prüfung: Materialposition', 57: 'Oberfläche vermessen', 58: 'Thermische Vorbereitung für die erste Schicht',
+      63: 'Warten auf ausgeglichene Bauraumtemperatur', 69: 'Düse abkühlen', 76: 'Vorextrusion vor dem Druck', 77: 'AMS vorbereiten',
+    },
+  },
+};
+let lang = 'en';
+try { lang = localStorage.getItem('lang') || ''; } catch (e) {}
+if (!T[lang]) lang = (navigator.language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en';
+const t = k => T[lang][k] ?? T.en[k];
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const v = t(el.dataset.t);
+    if (el.hasAttribute('data-html')) el.innerHTML = v; else el.textContent = v;
+  });
+  document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+  $('btnCam').textContent = camOn ? t('camHide') : t('camShow');
+  loadConfig();
+  if (lastStatus) render(lastStatus);
+}
+document.querySelectorAll('.lang button').forEach(b => b.onclick = () => {
+  lang = b.dataset.lang; try { localStorage.setItem('lang', lang); } catch (e) {} applyLang(); poll();
+});
+
+// ---------- file processing ----------
+async function call(file, send) {
+  const q = new URLSearchParams({ name: file.name, send: send ? 1 : 0, fast: $('optFast').checked ? 1 : 0 });
+  const res = await fetch('/process?' + q, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file });
+  const j = await res.json();
+  if (!res.ok) throw new Error(j.error || 'Failed');
+  return j;
+}
+function card(file) {
+  const div = document.createElement('div'); div.className = 'result';
+  div.innerHTML = '<h3></h3><div class="meta"></div><pre hidden></pre><div class="row"></div>';
+  div.querySelector('h3').textContent = file.name;
+  $('out').prepend(div);
+  return div;
+}
+function show(div, file, r, err) {
+  const meta = div.querySelector('.meta'), pre = div.querySelector('pre'), row = div.querySelector('.row');
+  row.innerHTML = '';
+  if (err) { meta.className = 'meta err'; meta.textContent = t('error') + err; return; }
+  const n = r.removed.length;
+  if (!n) { meta.className = 'meta warn'; meta.textContent = t('none'); }
+  else { meta.className = r.sent ? 'meta ok' : 'meta'; meta.textContent = t('removed')(n) + (r.sent ? t('opened') : ''); }
+  if (r.sendError) { meta.className = 'meta err'; meta.textContent += ' ' + r.sendError + t('stillDl'); }
+  if (n) { pre.hidden = false; pre.textContent = r.removed.map(x => `${x.where}:  ${x.code}`).join('\n'); }
+  const sendBtn = document.createElement('button');
+  sendBtn.textContent = r.sent ? t('sendAgain') : t('send');
+  if (r.sent) sendBtn.className = 'ghost';
+  sendBtn.onclick = () => run(file, true, div);
+  const dl = document.createElement('a'); dl.className = 'btn ghost'; dl.textContent = t('download');
+  dl.href = '/download?f=' + encodeURIComponent(r.outName);
+  row.append(sendBtn, dl);
+}
+async function run(file, send, div) {
+  div = div || card(file);
+  const meta = div.querySelector('.meta'); meta.className = 'meta'; meta.textContent = t('working');
+  try { show(div, file, await call(file, send)); } catch (e) { show(div, file, null, e.message); }
+}
+function handle(files) { for (const f of files) run(f, $('optSend').checked); }
+const drop = $('drop'), input = $('file');
+drop.onclick = () => input.click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') input.click(); };
+input.onchange = () => { handle([...input.files]); input.value = ''; };
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => handle([...e.dataTransfer.files]));
+for (const id of ['optSend', 'optFast']) {
+  try { const v = localStorage.getItem(id); if (v !== null) $(id).checked = v === '1'; } catch (e) {}
+  $(id).onchange = () => { try { localStorage.setItem(id, $(id).checked ? '1' : '0'); } catch (e) {} };
+}
+
+// ---------- printer status ----------
+let lastStatus = null, camOn = false;
+try { camOn = localStorage.getItem('cam') === '1'; } catch (e) {}
+const fmtT = (v, tg) => v == null ? '–' : Math.round(v) + '°' + (tg ? ' / ' + Math.round(tg) + '°' : '');
+function fmtMin(m) { if (m == null) return '–'; m = Math.max(0, m); const h = Math.floor(m / 60); return h ? `${h} h ${m % 60} min` : `${m} min`; }
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function chip(label, value) { const c = el('span', 'chip'); c.append(el('span', null, label + ' '), document.createTextNode(value)); return c; }
+
+function render(s) {
+  const box = $('printer');
+  if (s.connection === 'not configured') { box.hidden = true; $('settings').open = true; return; }
+  box.hidden = false;
+  $('pName').textContent = s.printer.name || 'Printer ' + (s.printer.ip || '');
+  const live = s.connection === 'connected' && s.age != null && s.age < 60;
+  $('pDot').className = 'dot ' + (live ? 'on' : s.connection === 'error' ? 'bad' : '');
+  $('pConn').textContent = live ? t('live') : (t('conn')[s.connection] || s.connection);
+  $('pMsg').className = 'p-msg' + (s.error ? ' err' : ' muted');
+  $('pMsg').textContent = s.error || (s.connection === 'connected' && s.age == null ? t('waiting') : '');
+  updateCam(s);
+  if (s.age == null) return;
+
+  const active = ['RUNNING', 'PAUSE', 'PREPARE'].includes(s.state);
+  $('pState').textContent = t('states')[s.state] || s.state || '–';
+  $('pJob').textContent = s.job || '';
+  const pct = s.percent ?? 0;
+  $('pBar').style.width = (active || s.state === 'FINISH' ? pct : 0) + '%';
+  $('pPct').textContent = s.percent != null ? pct + ' %' : '–';
+  $('pLayer').textContent = s.total_layers ? `${s.layer ?? 0} / ${s.total_layers}` : '–';
+  $('pLeft').textContent = active ? fmtMin(s.remaining_min) : '–';
+  $('pEta').textContent = active && s.remaining_min != null
+    ? new Date(Date.now() + Math.max(0, s.remaining_min) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '–';
+  const st = $('pStage'), stName = (T[lang].stages || {})[s.stage_id] || s.stage;
+  st.className = 'stage' + (s.stage_id === 3 ? ' cali' : '');
+  st.textContent = active && stName && s.stage_id !== 0 ? (s.stage_id === 3 ? '⚠ ' : '') + stName : '';
+  document.title = active ? `${pct}% · NoCali` : 'NoCali';
+
+  // alerts
+  const al = $('pAlerts'); al.innerHTML = '';
+  const alerts = [...(s.print_error ? [{ ...s.print_error, level: 2, label: t('printError') }] : []), ...(s.hms || [])];
+  for (const a of alerts) {
+    const d = el('div', 'alert lvl' + a.level);
+    d.append(el('b', null, (a.label || t('hmsLevels')[a.level] || 'HMS') + ': '));
+    d.append(document.createTextNode((a.text || '') + ' '));
+    const c = el('code', null, a.code + ' · '); const link = el('a', null, t('details'));
+    link.href = a.url; link.target = '_blank'; link.rel = 'noopener'; c.append(link); d.append(c);
+    al.append(d);
+  }
+
+  $('tNoz').textContent = fmtT(s.nozzle, s.nozzle_target);
+  $('tBed').textContent = fmtT(s.bed, s.bed_target);
+  $('tCh').textContent = fmtT(s.chamber);
+
+  const chips = $('chips'); chips.innerHTML = '';
+  if (s.speed) chips.append(chip(t('speed'), (t('speeds')[s.speed] || s.speed) + (s.speed_pct ? ` (${s.speed_pct} %)` : '')));
+  const f = s.fans || {};
+  if (f.part != null) chips.append(chip(t('partFan'), f.part + ' %'));
+  if (f.aux != null) chips.append(chip(t('auxFan'), f.aux + ' %'));
+  if (f.chamber != null) chips.append(chip(t('chamberFan'), f.chamber + ' %'));
+  if (s.nozzle_diameter) chips.append(chip(t('nozzleInfo'), s.nozzle_diameter + ' mm'));
+  if (s.wifi) chips.append(chip(t('wifi'), s.wifi.replace('dBm', ' dBm')));
+  if (s.light) chips.append(chip(t('light'), s.light === 'on' ? t('on') : s.light === 'off' ? t('off') : s.light));
+
+  renderAms(s.ams);
+}
+
+function slotEl(tr, label) {
+  const d = el('div', 'slot' + (tr.active ? ' active' : '') + (tr.empty ? ' empty' : ''));
+  const sw = el('div', 'swatch');
+  if (!tr.empty) {
+    const cols = tr.colors && tr.colors.length > 1 ? tr.colors : null;
+    sw.style.background = cols ? `conic-gradient(${cols.join(',')})` : (tr.color || 'transparent');
+  }
+  d.append(sw, el('b', null, tr.empty ? t('emptySlot') : tr.type));
+  d.append(el('small', null, tr.empty ? label : (tr.active ? '▶ ' + t('active') : (tr.name || label))));
+  if (!tr.empty && tr.remain != null) d.append(el('small', null, tr.remain + ' %'));
+  return d;
+}
+function renderAms(a) {
+  const box = $('ams'); box.innerHTML = '';
+  const has = a && (a.units.length || a.external);
+  $('amsBox').hidden = !has;
+  if (!has) return;
+  for (const u of a.units) {
+    const w = el('div', 'ams-unit');
+    const h = el('div', 'ams-head'); h.append(el('b', null, u.label));
+    if (u.humidity != null) h.append(el('span', null, `${t('humidity')} ${u.humidity} %`));
+    if (u.temp != null) h.append(el('span', null, `${Math.round(u.temp)}°`));
+    const slots = el('div', 'slots');
+    u.trays.forEach((tr, i) => slots.append(slotEl(tr, `${'ABCD'[u.id % 4] || u.id}${i + 1}`)));
+    w.append(h, slots); box.append(w);
+  }
+  if (a.external) {
+    const w = el('div', 'ams-unit'); const h = el('div', 'ams-head'); h.append(el('b', null, t('ext')));
+    const slots = el('div', 'slots'); slots.append(slotEl(a.external, 'Ext'));
+    w.append(h, slots); box.append(w);
+  }
+}
+
+// camera
+function updateCam(s) {
+  const cam = $('cam'), img = $('camImg'), msg = $('camMsg');
+  $('btnCam').hidden = !s.camera && !camOn;
+  cam.classList.toggle('on', camOn);
+  if (!camOn) { if (img.src) img.removeAttribute('src'); return; }
+  if (!s.camera_ffmpeg) { msg.textContent = t('camNoFfmpeg'); img.removeAttribute('src'); return; }
+  if (!s.camera) { msg.textContent = s.age == null ? t('camLoading') : t('camNone'); return; }
+  if (!img.getAttribute('src')) { msg.textContent = t('camLoading'); img.src = '/camera.mjpg?ts=' + Date.now(); }
+}
+$('camImg').onload = () => { $('camMsg').textContent = ''; };
+$('camImg').onerror = async () => {
+  const img = $('camImg'); img.removeAttribute('src');
+  try { const r = await fetch('/camera.jpg'); if (!r.ok) $('camMsg').textContent = t('camErr') + (await r.json()).error; } catch (e) {}
+  setTimeout(() => { if (camOn && lastStatus) updateCam(lastStatus); }, 5000);
+};
+$('btnCam').onclick = () => {
+  camOn = !camOn; try { localStorage.setItem('cam', camOn ? '1' : '0'); } catch (e) {}
+  $('btnCam').textContent = camOn ? t('camHide') : t('camShow');
+  if (lastStatus) updateCam(lastStatus);
+};
+
+async function poll() {
+  try {
+    const s = await (await fetch('/status?lang=' + lang)).json();
+    lastStatus = s; $('offline').style.display = 'none'; render(s);
+  } catch (e) { $('offline').style.display = 'block'; }
+}
+
+// ---------- settings ----------
+async function loadConfig() {
+  try {
+    const c = await (await fetch('/config')).json();
+    if (document.activeElement && document.activeElement.form === $('cfgForm')) return;
+    $('cIp').value = c.ip; $('cSerial').value = c.serial; $('cName').value = c.name;
+    $('cCode').placeholder = c.hasCode ? t('codeSaved') : t('code8');
+  } catch (e) {}
+}
+$('btnFind').onclick = async () => {
+  const b = $('btnFind'), f = $('found');
+  b.disabled = true; b.textContent = t('searching'); f.innerHTML = '';
+  try {
+    const r = await (await fetch('/discover')).json();
+    if (r.error) throw new Error(r.error);
+    if (!r.printers.length) f.textContent = t('notFound');
+    for (const p of r.printers) {
+      const btn = el('button', 'ghost', `${p.name || p.model} · ${p.ip} · ${p.serial}`); btn.type = 'button';
+      btn.onclick = () => { $('cIp').value = p.ip; $('cSerial').value = p.serial; if (!$('cName').value) $('cName').value = p.name; $('cCode').focus(); };
+      f.append(btn);
+    }
+  } catch (e) { f.textContent = e.message; }
+  b.disabled = false; b.textContent = t('find');
+};
+$('cfgForm').onsubmit = async e => {
+  e.preventDefault();
+  const msg = $('cfgMsg');
+  const body = { ip: $('cIp').value, serial: $('cSerial').value, name: $('cName').value, code: $('cCode').value };
+  const res = await fetch('/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await res.json();
+  msg.className = res.ok ? 'muted' : 'err';
+  msg.textContent = res.ok ? t('saved') : j.error;
+  if (res.ok) {
+    $('cCode').value = ''; $('camImg').removeAttribute('src'); loadConfig();
+    setTimeout(() => { $('settings').open = false; msg.textContent = ''; }, 1500); poll();
+  }
+};
+
+fetch('/health').then(r => r.json()).then(h => { $('ver').textContent = 'v' + h.version; }).catch(() => {});
+applyLang(); poll(); setInterval(poll, 2000);
+</script>
+</body>
+</html>
